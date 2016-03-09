@@ -1,9 +1,9 @@
 title: Run npm command
 summary: Runs `npm` with the given command and args.
 description: Runs `npm` with the given command and args.
-website: https://github.com/vasarhelyia/steps-npm
-source_code_url: https://github.com/vasarhelyia/steps-npm
-support_url: https://github.com/vasarhelyia/steps-npm/issues
+website: https://github.com/bitrise-io/steps-npm
+source_code_url: https://github.com/bitrise-io/steps-npm
+support_url: https://github.com/bitrise-io/steps-npm/issues
 host_os_tags:
 - osx-10.10
 project_type_tags:
