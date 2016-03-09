@@ -6,8 +6,8 @@ workflows:
     steps:
     - path::./:
         inputs:
-          - command: install
-          - options: -d -ll
+          # - command: install
+          # - options: -d -ll
 
 # ----------------------------------------------------------------
 # --- workflows to Share this step into a Step Library
