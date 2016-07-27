@@ -14,6 +14,12 @@ deps:
   brew:
   - name: node
 inputs:
+  - workdir: $BITRISE_SOURCE_DIR
+    opts:
+      title: Working directory
+      description: |
+        Working directory of the step.
+        You can leave it empty to not change it.
   - command:
     opts:
       title: The `npm` command to run
