@@ -1,6 +1,10 @@
 format_version: 1.1.0
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
+app:
+  envs:
+  - RELEASE_VERSION: 0.1.1
+
 workflows:
   test:
     steps:
@@ -10,14 +14,28 @@ workflows:
           # - command: install
           # - options: -d -ll
 
+  # ----------------------------------------------------------------
+  # --- workflow to create Release version
+  create-release:
+    steps:
+    - script:
+        title:
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            go get -u github.com/bitrise-tools/releaseman
+            export CI=true
+            releaseman create --version "$RELEASE_VERSION"
+
 # ----------------------------------------------------------------
 # --- workflows to Share this step into a Step Library
   share-this-step:
     envs:
       # if you want to share this step into a StepLib
-      - MY_STEPLIB_REPO_FORK_GIT_URL:
+      - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
       - STEP_ID_IN_STEPLIB: npm
-      - STEP_GIT_VERION_TAG_TO_SHARE: 0.1.0
+      - STEP_GIT_VERION_TAG_TO_SHARE: $RELEASE_VERSION
       - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-npm.git
     description: |-
       If this is the first time you try to share a Step you should
