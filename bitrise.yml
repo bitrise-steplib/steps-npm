@@ -6,6 +6,7 @@ workflows:
     steps:
     - path::./:
         inputs:
+          # - workdir: $BITRISE_SOURCE_DIR
           # - command: install
           # - options: -d -ll
 
