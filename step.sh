@@ -26,4 +26,4 @@ debug_echo "is_debug: $is_debug"
 
 debug_echo "===> Running 'npm $command args'"
 
-npm $command $args
+npm "$command" "$args"
