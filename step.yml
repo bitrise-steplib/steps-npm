@@ -6,12 +6,13 @@ source_code_url: https://github.com/bitrise-steplib/steps-npm
 support_url: https://github.com/bitrise-steplib/steps-npm/issues
 host_os_tags:
 - osx-10.10
-project_type_tags:
-- react-native
+- ubuntu
 type_tags:
 - npm
 deps:
   brew:
+  - name: node
+  ubuntu:
   - name: node
 inputs:
   - workdir: $BITRISE_SOURCE_DIR
@@ -30,3 +31,12 @@ inputs:
       description: |-
         Arguments are added to the `npm` command. You can specify multiple arguments, separated
         by a space character. For example `-dd -ll`
+  - is_debug: "no"
+    opts:
+      title: "Debug?"
+      description: |
+        If debug=yes the step will print debug infos about
+        the working dir, tmp file path, exit code, etc.
+      value_options:
+        - "no"
+        - "yes"
