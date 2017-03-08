@@ -6,13 +6,14 @@ source_code_url: https://github.com/bitrise-steplib/steps-npm
 support_url: https://github.com/bitrise-steplib/steps-npm/issues
 host_os_tags:
 - osx-10.10
-project_type_tags:
-- react-native
 type_tags:
-- npm
+- utility
 deps:
   brew:
   - name: node
+  apt_get:
+  - name: nodejs
+  - name: npm
 inputs:
   - workdir: $BITRISE_SOURCE_DIR
     opts:
@@ -22,11 +23,14 @@ inputs:
         You can leave it empty to not change it.
   - command:
     opts:
-      title: The `npm` command to run
-      description: Specify the command to run with `npm`. For example `install`, or `test`.
-  - args:
-    opts:
-      title: Arguments for running `npm` commands
+      title: The `npm` command with arguments to run
       description: |-
-        Arguments are added to the `npm` command. You can specify multiple arguments, separated
-        by a space character. For example `-dd -ll`
+        Specify the command with arguments to run with `npm`.
+
+        This input value will be append to the end of the `npm` command call.
+        
+        For example:
+        
+        - `install` -> `npm install`
+        - `install -g cordova` -> `npm install -g cordova`
+      is_required: true
