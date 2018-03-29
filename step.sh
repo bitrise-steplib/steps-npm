@@ -71,6 +71,10 @@ if [ ! -z "${workdir}" ] ; then
   fi
 fi
 
+echo_info "Npm version"
+
+npm --version
+
 echo_info "Run npm command"
 
 set -x
