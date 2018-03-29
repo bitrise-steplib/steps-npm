@@ -1,6 +1,11 @@
-## Changelog (Current version: 0.9.0)
+## Changelog (Current version: 0.9.1)
 
 -----------------
+
+### 0.9.1 (2018 Mar 29)
+
+* [76555f4] Prepare for 0.9.1
+* [e4d76c6] Added version printing (#4)
 
 ### 0.9.0 (2017 Mar 08)
 
@@ -15,4 +20,4 @@
 
 -----------------
 
-Updated: 2017 Mar 08
+Updated: 2018 Mar 29
