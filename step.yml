@@ -14,6 +14,9 @@ deps:
   apt_get:
   - name: nodejs
   - name: npm
+toolkit:
+  go:
+    package_name: github.com/lszucs/steps-npm
 inputs:
   - workdir: $BITRISE_SOURCE_DIR
     opts:

@@ -9,9 +9,6 @@ workflows:
   test:
     steps:
     - path::./:
-        inputs:
-          - workdir: $BITRISE_SOURCE_DIR
-          - command: install -g cordova
 
   # ----------------------------------------------------------------
   # --- workflow to create Release version
