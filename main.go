@@ -1,11 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/fileutil"
 )
 
+type jsonModel struct {
+	Engines struct {
+		Npm string
+	}
+}
+
 func main() {
-	fmt.Println("hello world")
-	command.NewWithStandardOuts("echo", "hello world -- from go-utils command").Run()
+	content, _ := fileutil.ReadStringFromFile("package.json")
+	var m jsonModel;
+
+	_ = json.Unmarshal([]byte(content), &m)
+	fmt.Printf("detected npm version: %s\n", m.Engines.Npm)
 }
