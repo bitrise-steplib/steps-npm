@@ -3,11 +3,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:747d505b2a5473618f51b3e16456e96c94b2bb53560031c77cf3414d1548ca20"
+  digest = "1:9c99a04b022047c9aaec947da2632bf5b0cc2d170b65bae9f0deb60d9067fbe9"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "command",
     "errorutil",
+    "fileutil",
     "pathutil",
   ]
   pruneopts = "UT"
@@ -16,6 +17,9 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = ["github.com/bitrise-io/go-utils/command"]
+  input-imports = [
+    "github.com/bitrise-io/go-utils/command",
+    "github.com/bitrise-io/go-utils/fileutil",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
