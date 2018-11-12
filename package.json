@@ -1,0 +1,22 @@
+{
+  "name": "steps-npm",
+  "version": "1.0.0",
+  "description": "Dummy nodejs project to test Bitrise run npm command step",
+  "main": "index.js",
+  "engines": {
+    "npm": "6.4.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lszucs/steps-npm.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lszucs/steps-npm/issues"
+  },
+  "homepage": "https://github.com/lszucs/steps-npm#readme"
+}
