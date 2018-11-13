@@ -48,7 +48,7 @@ func main() {
 	if config.NpmVersion == "" {
 		config.NpmVersion, configSource = getNpmVersionFromPackageJson("package.json"), "PACKAGEJSON"
 		if config.NpmVersion == "" {
-			if _, err := exec.LookPath("npm2"); err == nil {
+			if _, err := exec.LookPath("npm"); err == nil {
 				config.NpmVersion, configSource = getNpmVersionFromSystem(), "SYSTEM"
 
 			} else {
