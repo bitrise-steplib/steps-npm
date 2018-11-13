@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/fileutil"
 	"os"
 	"os/exec"
 	"runtime"
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/fileutil"
 )
 
 type jsonModel struct {
@@ -30,9 +30,9 @@ func createConfigsModelFromEnvs() ConfigsModel {
 	}
 }
 
-func getNpmVersionFromPackageJson(path string) (string) {
+func getNpmVersionFromPackageJson(path string) string {
 	content, _ := fileutil.ReadStringFromFile("package.json")
-	var m jsonModel;
+	var m jsonModel
 	_ = json.Unmarshal([]byte(content), &m)
 	return m.Engines.Npm
 }
@@ -43,7 +43,7 @@ func getNpmVersionFromSystem() string {
 }
 
 func main() {
-	
+
 	config, configSource := createConfigsModelFromEnvs(), "USERINPUT"
 	if config.NpmVersion == "" {
 		config.NpmVersion, configSource = getNpmVersionFromPackageJson("package.json"), "PACKAGEJSON"
@@ -54,16 +54,16 @@ func main() {
 			} else {
 				fmt.Printf("INFO: npm binary not found on PATH, installing latest")
 
-			var cmd *command.Model
-			switch (runtime.GOOS) {
-			case "darwin":
-				cmd = command.New("brew", "install", "node")
-			case "linux":
-				cmd = command.New("apt-get", "-y", "install", "npm")
-			default:
-				fmt.Printf("FATAL ERROR: not supported OS version")
-				return
-			}
+				var cmd *command.Model
+				switch runtime.GOOS {
+				case "darwin":
+					cmd = command.New("brew", "install", "node")
+				case "linux":
+					cmd = command.New("apt-get", "-y", "install", "npm")
+				default:
+					fmt.Printf("FATAL ERROR: not supported OS version")
+					return
+				}
 
 				_, err := command.RunCmdAndReturnTrimmedOutput(cmd.GetCmd())
 				configSource = "NONE"
