@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	"os"
 	"os/exec"
@@ -68,9 +69,16 @@ func installLatestNpm() error {
 	return err
 }
 
+func failf(f string, args ...interface{}) {
+	log.Errorf(f, args...)
+	os.Exit(1)
+}
+
 func main() {
 	var config ConfigsModel
-	stepconf.Parse(&config)
+	if err := stepconf.Parse(&config); err != nil {
+		failf("Couldn't create step config: %v\n", err)
+	}
 
 	if config.NpmVersion == "" {
 		config.NpmVersion = getNpmVersionFromPackageJson("package.json")
@@ -82,8 +90,7 @@ func main() {
 				err := installLatestNpm()
 
 				if err != nil {
-					fmt.Printf("FATAL ERROR: %s\n", err)
-					return
+					failf("Couldn't install npm: %v", err)
 				}
 			}
 		}
