@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 )
@@ -37,25 +38,43 @@ func getNpmVersionFromPackageJson(path string) (string) {
 }
 
 func getNpmVersionFromSystem() string {
-	_, error := exec.LookPath("npm")
-
-	if (error != nil) {
-
-	}
-
 	out, _ := command.RunCmdAndReturnTrimmedOutput(command.New("npm", "--version").GetCmd())
 	return out
 }
 
 func main() {
 	
-	config := createConfigsModelFromEnvs()
+	config, configSource := createConfigsModelFromEnvs(), "USERINPUT"
 	if config.NpmVersion == "" {
-		config.NpmVersion = getNpmVersionFromPackageJson("package.json")
+		config.NpmVersion, configSource = getNpmVersionFromPackageJson("package.json"), "PACKAGEJSON"
 		if config.NpmVersion == "" {
-			config.NpmVersion = getNpmVersionFromSystem()
+			if _, err := exec.LookPath("npm2"); err == nil {
+				config.NpmVersion, configSource = getNpmVersionFromSystem(), "SYSTEM"
+
+			} else {
+				fmt.Printf("INFO: npm binary not found on PATH, installing latest")
+
+			var cmd *command.Model
+			switch (runtime.GOOS) {
+			case "darwin":
+				cmd = command.New("brew", "install", "node")
+			case "linux":
+				cmd = command.New("apt-get", "-y", "install", "npm")
+			default:
+				fmt.Printf("FATAL ERROR: not supported OS version")
+				return
+			}
+
+				_, err := command.RunCmdAndReturnTrimmedOutput(cmd.GetCmd())
+				configSource = "NONE"
+
+				if err != nil {
+					fmt.Printf("FATAL ERROR: %s\n", err)
+					return
+				}
+			}
 		}
 	}
 
-	fmt.Printf("detected npm version: %s\n", config.NpmVersion)
+	fmt.Printf("detected npm version: %s using config source: %s\n", config.NpmVersion, configSource)
 }
