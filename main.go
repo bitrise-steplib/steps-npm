@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
@@ -55,6 +56,17 @@ func getCommandForPlatform(os string) *command.Model {
 	return cmd
 }
 
+func installLatestNpm() error {
+	fmt.Printf("INFO: npm binary not found on PATH, installing latest")
+	
+	installNpmCmd := getCommandForPlatform(runtime.GOOS).GetCmd()
+	if installNpmCmd == nil {
+		return errors.New("FATAL ERROR: not supported OS version")
+	}
+	_, err := command.RunCmdAndReturnTrimmedOutput(installNpmCmd)
+	return err
+}
+
 func main() {
 
 	config, configSource := createConfigsModelFromEnvs(), "USERINPUT"
@@ -65,15 +77,8 @@ func main() {
 				config.NpmVersion, configSource = getNpmVersionFromSystem(), "SYSTEM"
 
 			} else {
-				fmt.Printf("INFO: npm binary not found on PATH, installing latest")
 				configSource = "NONE"
-				
-				installNpmCmd := getCommandForPlatform(runtime.GOOS).GetCmd()
-				if installNpmCmd == nil {
-					fmt.Printf("FATAL ERROR: not supported OS version")
-					return
-				}
-				_, err := command.RunCmdAndReturnTrimmedOutput(installNpmCmd)
+				err := installLatestNpm()
 
 				if err != nil {
 					fmt.Printf("FATAL ERROR: %s\n", err)
