@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-tools/go-steputils/stepconf"
 	"os"
 	"os/exec"
 	"runtime"
@@ -18,9 +19,9 @@ type jsonModel struct {
 }
 
 type ConfigsModel struct {
-	Workdir    string
-	Command    string
-	NpmVersion string
+	Workdir    string `env:"workdir"`
+	Command    string `env:"command,required"`
+	NpmVersion string `env:"npm_version"`
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -68,16 +69,16 @@ func installLatestNpm() error {
 }
 
 func main() {
+	var config ConfigsModel
+	stepconf.Parse(&config)
 
-	config, configSource := createConfigsModelFromEnvs(), "USERINPUT"
 	if config.NpmVersion == "" {
-		config.NpmVersion, configSource = getNpmVersionFromPackageJson("package.json"), "PACKAGEJSON"
+		config.NpmVersion = getNpmVersionFromPackageJson("package.json")
 		if config.NpmVersion == "" {
 			if _, err := exec.LookPath("npm"); err == nil {
-				config.NpmVersion, configSource = getNpmVersionFromSystem(), "SYSTEM"
+				config.NpmVersion = getNpmVersionFromSystem()
 
 			} else {
-				configSource = "NONE"
 				err := installLatestNpm()
 
 				if err != nil {
@@ -88,5 +89,5 @@ func main() {
 		}
 	}
 
-	fmt.Printf("detected npm version: %s using config source: %s\n", config.NpmVersion, configSource)
+	fmt.Printf("detected npm version: %s\n", config.NpmVersion)
 }
