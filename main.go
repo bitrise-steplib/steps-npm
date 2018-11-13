@@ -50,8 +50,7 @@ func getCommandForPlatform(os string) *command.Model {
 	case "linux":
 		cmd = command.New("apt-get", "-y", "install", "npm")
 	default:
-		fmt.Printf("FATAL ERROR: not supported OS version")
-		return
+		return nil
 	}
 	return cmd
 }
@@ -70,6 +69,10 @@ func main() {
 
 				
 				cmd := getCommandForPlatform(runtime.GOOS).GetCmd()
+				if cmd == nil {
+					fmt.Printf("FATAL ERROR: not supported OS version")
+					return
+				}
 				_, err := command.RunCmdAndReturnTrimmedOutput(cmd)
 				configSource = "NONE"
 
