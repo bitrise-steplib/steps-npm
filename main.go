@@ -66,15 +66,14 @@ func main() {
 
 			} else {
 				fmt.Printf("INFO: npm binary not found on PATH, installing latest")
-
+				configSource = "NONE"
 				
-				cmd := getCommandForPlatform(runtime.GOOS).GetCmd()
-				if cmd == nil {
+				installNpmCmd := getCommandForPlatform(runtime.GOOS).GetCmd()
+				if installNpmCmd == nil {
 					fmt.Printf("FATAL ERROR: not supported OS version")
 					return
 				}
-				_, err := command.RunCmdAndReturnTrimmedOutput(cmd)
-				configSource = "NONE"
+				_, err := command.RunCmdAndReturnTrimmedOutput(installNpmCmd)
 
 				if err != nil {
 					fmt.Printf("FATAL ERROR: %s\n", err)
