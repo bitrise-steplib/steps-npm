@@ -45,7 +45,7 @@ func getNpmVersionFromSystem() string {
 
 func getCommandForPlatform(os string) *command.Model {
 	var cmd *command.Model
-	switch runtime.GOOS {
+	switch os {
 	case "darwin":
 		cmd = command.New("brew", "install", "node")
 	case "linux":
