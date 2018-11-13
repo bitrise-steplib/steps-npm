@@ -8,12 +8,6 @@ host_os_tags:
 - osx-10.10
 type_tags:
 - utility
-deps:
-  brew:
-  - name: node
-  apt_get:
-  - name: nodejs
-  - name: npm
 toolkit:
   go:
     package_name: github.com/lszucs/steps-npm
