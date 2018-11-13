@@ -31,3 +31,7 @@ inputs:
         - `install` -> `npm install`
         - `install -g cordova` -> `npm install -g cordova`
       is_required: true
+  - npm_version:
+    opts:
+      title: Version of npm to use
+      description: Lorem ipsum
