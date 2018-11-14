@@ -13,6 +13,8 @@ import (
 	"runtime"
 )
 
+var ErrMissingNpmVersion = errors.New("Missing npm version constraint in package.json")
+
 type jsonModel struct {
 	Engines struct {
 		Npm string
@@ -33,10 +35,14 @@ func createConfigsModelFromEnvs() ConfigsModel {
 	}
 }
 
-func getNpmVersionFromPackageJson(content string) string {
+func getNpmVersionFromPackageJson(content string) (string, error) {
 	var m jsonModel
 	_ = json.Unmarshal([]byte(content), &m)
-	return m.Engines.Npm
+	if m.Engines.Npm == "" {
+		return "", ErrMissingNpmVersion
+	}
+
+	return m.Engines.Npm, nil
 }
 
 func getNpmVersionFromSystem() string {
@@ -80,10 +86,10 @@ func main() {
 	}
 
 	if config.NpmVersion == "" {
-		content, _ := fileutil.ReadStringFromFile("package.json")
-		config.NpmVersion = getNpmVersionFromPackageJson(content)
+		content, err := fileutil.ReadStringFromFile("package.json")
+		config.NpmVersion, err = getNpmVersionFromPackageJson(content)
 		if config.NpmVersion == "" {
-			if _, err := exec.LookPath("npm"); err == nil {
+			if _, err = exec.LookPath("npm"); err == nil {
 				config.NpmVersion = getNpmVersionFromSystem()
 
 			} else {
