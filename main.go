@@ -42,23 +42,24 @@ func getNpmVersionFromSystem() string {
 	return out
 }
 
-func getCommandForPlatform(os string) *command.Model {
-	var cmd *command.Model
+func getCommandForPlatform(os string) (*command.Model, error) {
+	var args []string
 	switch os {
 	case "darwin":
-		cmd = command.New("brew", "install", "node")
+		args = []string{"brew", "install", "node"}
 	case "linux":
-		cmd = command.New("apt-get", "-y", "install", "npm")
+		args = []string{"apt-get", "-y", "install", "npm"}
 	default:
-		return nil
+		return nil, error(nil)
 	}
-	return cmd
+	return command.NewFromSlice(args)
 }
 
 func installLatestNpm() error {
 	fmt.Printf("INFO: npm binary not found on PATH, installing latest")
 	
-	installNpmCmd := getCommandForPlatform(runtime.GOOS).GetCmd()
+	cmd, _ := getCommandForPlatform(runtime.GOOS)
+	installNpmCmd := cmd.GetCmd()
 	if installNpmCmd == nil {
 		return errors.New("FATAL ERROR: not supported OS version")
 	}
