@@ -27,14 +27,6 @@ type ConfigsModel struct {
 	NpmVersion string `env:"npm_version"`
 }
 
-func createConfigsModelFromEnvs() ConfigsModel {
-	return ConfigsModel{
-		Workdir:    os.Getenv("workdir"),
-		Command:    os.Getenv("command"),
-		NpmVersion: os.Getenv("npm_version"),
-	}
-}
-
 func getNpmVersionFromPackageJson(content string) (string, error) {
 	var m jsonModel
 	_ = json.Unmarshal([]byte(content), &m)
