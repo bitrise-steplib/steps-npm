@@ -33,8 +33,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 	}
 }
 
-func getNpmVersionFromPackageJson(path string) string {
-	content, _ := fileutil.ReadStringFromFile("package.json")
+func getNpmVersionFromPackageJson(content string) string {
 	var m jsonModel
 	_ = json.Unmarshal([]byte(content), &m)
 	return m.Engines.Npm
@@ -81,7 +80,8 @@ func main() {
 	}
 
 	if config.NpmVersion == "" {
-		config.NpmVersion = getNpmVersionFromPackageJson("package.json")
+		content, _ := fileutil.ReadStringFromFile("package.json")
+		config.NpmVersion = getNpmVersionFromPackageJson(content)
 		if config.NpmVersion == "" {
 			if _, err := exec.LookPath("npm"); err == nil {
 				config.NpmVersion = getNpmVersionFromSystem()
