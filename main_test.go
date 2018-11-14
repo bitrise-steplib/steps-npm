@@ -23,3 +23,24 @@ func Test_GetNpmVersionFromPackageJson(t *testing.T) {
 	}
 	
 }
+
+func Test_getCommandAsSliceForPlatform (t *testing.T) {
+
+	// todo: figure out how to check for commands, not just errors
+	testCases := []struct {
+		platform string
+		wantE error
+	} {
+		{`darwin`, error(nil)},
+		{`linux`, error(nil)},
+		{`windows`, ErrOsNotSupported},
+	}
+
+	for _, tc := range testCases {
+		_, gotE := getCommandAsSliceForPlatform(tc.platform)
+		if gotE != tc.wantE {
+			t.Errorf(`getCommandAsSliceForPlatform(%s) returned %s instead of %s`, tc.platform, gotE, tc.wantE)
+		}
+	}
+
+}
