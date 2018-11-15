@@ -28,10 +28,18 @@ type ConfigsModel struct {
 	NpmVersion string `env:"npm_version"`
 }
 
-func getNpmVersionFromPackageJson(content string) string {
-	var m jsonModel
-	err := json.Unmarshal([]byte(content), &m)
+func getNpmVersionFromPackageJson() string {
+	jsonStr, err := fileutil.ReadStringFromFile("package.json")
 	if err != nil {
+		failf("No package.json file found", err)
+	}
+
+	return extractNpmVersion(jsonStr)
+}
+
+func extractNpmVersion(jsonStr string)  string {
+	var m jsonModel
+	if err := json.Unmarshal([]byte(jsonStr), &m); err != nil {
 		return ""
 	}
 
@@ -95,21 +103,19 @@ func main() {
 	config.print()
 
 	if config.NpmVersion == "" {
-		content, err := fileutil.ReadStringFromFile("package.json")
-		if err != nil {
-			failf("No package.json file found", err)
-		}
+		log.Infof("No npm version provided as step input. Checking package.json.")
 
-		if ver := getNpmVersionFromPackageJson(content); ver == "" {
-			if path, _ := exec.LookPath("npm"); path == "" {
-				config.NpmVersion = getNpmVersionFromSystem()
-			} else {
+		if ver := getNpmVersionFromPackageJson(); ver == "" {
+			log.Warnf("No npm version found in package.json! Falling back to installed npm.")
+			if _, err := exec.LookPath("npm"); err != nil {
 				if err := installLatestNpm(); err != nil {
 					failf("Couldn't install npm: %v", err)
 				}
+			} else {
+				ver = getNpmVersionFromSystem()
 			}
+
+			log.Donef("Step success")
 		}
 	}
-
-	fmt.Printf("detected npm version: %s\n", config.NpmVersion)
 }
