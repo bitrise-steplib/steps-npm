@@ -78,11 +78,21 @@ func failf(f string, args ...interface{}) {
 	os.Exit(1)
 }
 
+func (configs ConfigsModel) print() {
+	fmt.Println()
+	log.Infof("Configs:")
+	log.Printf(" - Workdir: %s", configs.Workdir)
+	log.Printf(" - Command: %s", configs.Command)
+	log.Printf(" - NpmVerion: %s", configs.NpmVersion)
+	fmt.Println()
+}
+
 func main() {
 	var config ConfigsModel
 	if err := stepconf.Parse(&config); err != nil {
 		failf("Couldn't create step config: %v\n", err)
 	}
+	config.print()
 
 	if config.NpmVersion == "" {
 		content, err := fileutil.ReadStringFromFile("package.json")
