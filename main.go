@@ -13,9 +13,6 @@ import (
 	"runtime"
 )
 
-var ErrMissingNpmVersion = errors.New("Missing npm version constraint in package.json")
-var ErrOsNotSupported = errors.New(fmt.Sprintf(`Operating system %s not supported`, runtime.GOOS))
-
 type jsonModel struct {
 	Engines struct {
 		Npm string
@@ -51,21 +48,19 @@ func getNpmVersionFromSystem() string {
 	return out
 }
 
-func getCommandAsSliceForPlatform(os string) ([]string, error) {
+func getCommandAsSliceForPlatform(os string) []string {
 	var args []string
 	switch os {
 	case "darwin":
 		args = []string{"brew", "install", "node"}
 	case "linux":
 		args = []string{"apt-get", "-y", "install", "npm"}
-	default:
-		return args, ErrOsNotSupported
 	}
-	return args, nil
+	return args
 }
 
 func createInstallNpmCommand(platform string) *command.Model {
-	slice, _ := getCommandAsSliceForPlatform(platform)
+	slice := getCommandAsSliceForPlatform(platform)
 	cmd, _ := command.NewFromSlice(slice)
 	return cmd
 }
