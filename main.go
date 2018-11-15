@@ -28,14 +28,14 @@ type ConfigsModel struct {
 	NpmVersion string `env:"npm_version"`
 }
 
-func getNpmVersionFromPackageJson(content string) (string, error) {
+func getNpmVersionFromPackageJson(content string) string {
 	var m jsonModel
-	_ = json.Unmarshal([]byte(content), &m)
-	if m.Engines.Npm == "" {
-		return "", ErrMissingNpmVersion
+	err := json.Unmarshal([]byte(content), &m)
+	if err != nil {
+		return ""
 	}
 
-	return m.Engines.Npm, nil
+	return m.Engines.Npm
 }
 
 func getNpmVersionFromSystem() string {
@@ -96,15 +96,15 @@ func main() {
 
 	if config.NpmVersion == "" {
 		content, err := fileutil.ReadStringFromFile("package.json")
-		config.NpmVersion, err = getNpmVersionFromPackageJson(content)
-		if config.NpmVersion == "" {
-			if _, err = exec.LookPath("npm"); err == nil {
+		if err != nil {
+			failf("No package.json file found", err)
+		}
+
+		if ver := getNpmVersionFromPackageJson(content); ver == "" {
+			if path, _ := exec.LookPath("npm"); path == "" {
 				config.NpmVersion = getNpmVersionFromSystem()
-
 			} else {
-				err := installLatestNpm()
-
-				if err != nil {
+				if err := installLatestNpm(); err != nil {
 					failf("Couldn't install npm: %v", err)
 				}
 			}
