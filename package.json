@@ -4,7 +4,7 @@
   "description": "Dummy nodejs project to test Bitrise run npm command step",
   "main": "index.js",
   "engines": {
-    "npm": "6.4.1"
+    "npm": "6.3.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

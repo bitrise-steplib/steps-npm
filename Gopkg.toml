@@ -36,3 +36,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/bitrise-tools/go-steputils"
+
+[[constraint]]
+  name = "github.com/hashicorp/go-version"
+  version = "1.0.0"

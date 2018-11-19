@@ -26,15 +26,23 @@
   pruneopts = "UT"
   revision = "ec226b2359fcd806be64f0ad2217d8e741a1ff11"
 
+[[projects]]
+  digest = "1:77395dd3847dac9c45118c668f5dab85aedf0163dc3b38aea6578c5cf0d502f9"
+  name = "github.com/hashicorp/go-version"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b5a281d3160aa11950a6182bd9a9dc2cb1e02d50"
+  version = "v1.0.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/bitrise-io/go-utils/command",
-    "github.com/bitrise-io/go-utils/errorutil",
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-tools/go-steputils/stepconf",
+    "github.com/hashicorp/go-version",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

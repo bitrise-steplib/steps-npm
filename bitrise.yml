@@ -7,12 +7,6 @@ app:
   - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
 
 workflows:
-  lint:
-    steps:
-    - go-list:
-    - golint:
-    - errcheck:
-    - go-test:
   test:
     steps:
     - go-list:
@@ -35,12 +29,12 @@ workflows:
         - content: |
             #!/bin/bash
             # git clone react native sample repo and use pkg json instead of hardcoded file
-            cp ../package.json .
+            git clone https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android.git .
 
     - path::./:
         inputs:
         - command: install
-        - npm_version: 6.4.0
+        # - npm_version: 6.4.0
 
   # ----------------------------------------------------------------
   # --- workflow to create Release version

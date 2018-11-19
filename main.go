@@ -11,6 +11,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-steputils/stepconf"
+	semver "github.com/hashicorp/go-version"
 )
 
 // Config model
@@ -45,7 +46,18 @@ func extractNpmVersion(jsonStr string) (string, error) {
 		return "", fmt.Errorf("json unmarshal error: %s", err)
 	}
 
-	return m.Engines.Npm, nil
+	if m.Engines.Npm == "" {
+		return "", fmt.Errorf("npm version constraint not found")
+	}
+
+	v, err := semver.NewVersion(m.Engines.Npm)
+	if err != nil {
+		return "", fmt.Errorf("engines.npm is not valid semver string")
+	}
+
+	ver := v.String()
+
+	return ver, nil
 }
 
 func createInstallNpmCommand(os string) (*command.Model, error) {
@@ -83,62 +95,90 @@ func installLatestNpm() (string, error) {
 
 func failf(f string, args ...interface{}) {
 	log.Errorf(f, args...)
+	fmt.Println()
 	os.Exit(1)
 }
 
 func runNpmCommand(npmCmd ...string) (string, error) {
 	cmd := command.New("npm", npmCmd...)
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
-	log.Infof(cmd.PrintableCommandArgs())
 	if err != nil {
 		return out, fmt.Errorf("error running npm command: %s", err)
 	}
+
+	fmt.Println()
+	log.Printf(cmd.PrintableCommandArgs())
+	fmt.Println()
+
+	return out, nil
+}
+
+func setNpmVersion(ver string) (string, error) {
+	out, err := runNpmCommand("install", "-g", fmt.Sprintf("npm@%s", ver))
+	if err != nil {
+		return out, fmt.Errorf("error running npm install: %s", err)
+	}
+
 	return out, nil
 }
 
 func main() {
-	var (
-		config Config
-		ver    string
-		out    string
-		err    error
-	)
-
+	var config Config
 	if err := stepconf.Parse(&config); err != nil {
-		failf("Couldn't create step config: %v\n", err)
+		failf("error parsing step config: %v", err)
 	}
 	stepconf.Print(config)
 
-	ver = config.NpmVersion
-	if ver == "" {
-		log.Infof("No npm version provided as step input. Checking package.json.")
-		if ver, err = getNpmVersionFromPackageJSON(); err != nil {
-			log.Warnf("No npm version found in package.json! Falling back to installed npm.")
-			if path, err := exec.LookPath("npm"); err != nil {
-				log.Warnf("npm not found on PATH, installing latest version")
-				if err := installLatestNpm(); err != nil {
-					failf("Couldn't install npm: %v", err)
+	if config.NpmVersion == "" {
+		log.Infof("Autodetecting npm version")
+
+		log.Printf("Checking package.json for npm version")
+		ver, err := getNpmVersionFromPackageJSON()
+		if err != nil {
+			log.Warnf("No npm version found in package.json")
+
+			log.Printf("Locating system installed npm")
+			path, err := exec.LookPath("npm")
+			if err != nil {
+				log.Warnf("npm not found on PATH")
+
+				log.Printf("Installing latest npm")
+				ver = "latest"
+				out, err := installLatestNpm()
+				if err != nil {
+					log.Errorf(out)
+					failf("Error installing npm: %s", err)
 				}
-				log.Infof("installing npm done")
+
+				log.Printf(out)
 			} else {
-				log.Infof("using npm installation located at %s", path)
+				log.Printf("npm found at %s", path)
+				out, err := runNpmCommand("--version")
+				if err != nil {
+					log.Warnf("Error getting installed npm version: %s", err)
+				}
+				ver = out
 			}
+		}
+
+		log.Infof("Setting npm version to %s", ver)
+		out, err := setNpmVersion(ver)
+		if err != nil {
+			log.Errorf(out)
+			failf("Error setting npm version to %s: %s", ver, err)
 		}
 	}
 
-	out, err = runNpmCommand("install", "-g", fmt.Sprintf("npm@%s", ver))
+	out, err := runNpmCommand(config.Command)
 	if err != nil {
 		log.Errorf(out)
-		failf("error setting npm version %s: %s", ver, err)
+		failf("Error running npm command %s: %s", config.Command, err)
 	}
 
-	out, err = runNpmCommand(config.Command)
-	if err != nil {
-		log.Errorf(out)
-		failf("error running npm command %s: %s", config.Command, err)
-	}
-
+	fmt.Println()
 	log.Donef("$ npm %s", config.Command)
-	log.Infof("npm %s output: ", out)
+	fmt.Println()
+	log.Printf(out)
+
 	log.Successf("Step success")
 }
