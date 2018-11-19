@@ -58,7 +58,7 @@ func extractNpmVersion(jsonStr string) (string, error) {
 	return v.String(), nil
 }
 
-func createInstallNpmCommand(os string) (*command.Model, error) {
+func createInstallNpmCommand(os string) *command.Model {
 	var args []string
 	switch os {
 	case "darwin":
@@ -67,17 +67,14 @@ func createInstallNpmCommand(os string) (*command.Model, error) {
 		args = []string{"apt-get", "-y", "install", "npm"}
 	}
 
-	return command.New(args[0], args[1:]...), nil
+	return command.New(args[0], args[1:]...)
 }
 
 func installLatestNpm() (string, error) {
-	cmd, err := createInstallNpmCommand(runtime.GOOS)
-	if err != nil {
-		return "", fmt.Errorf("error creating npm install command: %s", err)
-	}
+	cmd := createInstallNpmCommand(runtime.GOOS)
 
 	var out string
-	out, err = command.RunCmdAndReturnTrimmedOutput(cmd.GetCmd())
+	out, err := command.RunCmdAndReturnTrimmedOutput(cmd.GetCmd())
 
 	if err != nil {
 		return out, fmt.Errorf("error running npm install: %s", err)
@@ -86,8 +83,7 @@ func installLatestNpm() (string, error) {
 	return out, nil
 }
 
-func runAndLog(npmCmd ...string) (string, error) {
-	cmd := command.New("npm", npmCmd...)
+func runAndLog(cmd *command.Model) (string, error) {
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 	if err != nil {
 		return out, fmt.Errorf("error running npm command: %s", err)
@@ -100,7 +96,8 @@ func runAndLog(npmCmd ...string) (string, error) {
 }
 
 func setNpmVersion(ver string) (string, error) {
-	out, err := runAndLog("install", "-g", fmt.Sprintf("npm@%s", ver))
+	cmd := command.New("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
+	out, err := runAndLog(cmd)
 	if err != nil {
 		return out, fmt.Errorf("error running npm install: %s", err)
 	}
@@ -141,7 +138,8 @@ func main() {
 
 				log.Printf("Installing latest npm")
 				ver = "latest"
-				out, err := installLatestNpm()
+
+				out, err := runAndLog(createInstallNpmCommand(runtime.GOOS))
 				if err != nil {
 					log.Errorf(out)
 					failf("Error installing npm: %s", err)
@@ -150,7 +148,9 @@ func main() {
 				log.Printf(out)
 			} else {
 				log.Printf("npm found at %s", path)
-				out, err := runAndLog("--version")
+
+				cmd := command.New("npm", "--version")
+				out, err := runAndLog(cmd)
 				if err != nil {
 					log.Warnf("Error getting installed npm version: %s", err)
 				}
@@ -180,7 +180,9 @@ func main() {
 
 	fmt.Println()
 	log.Infof("Running user provided command")
-	out, err := runAndLog(config.Command)
+
+	cmd := command.New("npm", config.Command)
+	out, err := runAndLog(cmd)
 	if err != nil {
 		log.Errorf(out)
 		failf("Error running command %s: %s", config.Command, err)
