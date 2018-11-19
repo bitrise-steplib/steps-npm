@@ -28,12 +28,21 @@ workflows:
         inputs:
         - content: |
             #!/bin/bash
-            git clone https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android.git .
+            git clone https://github.com/lszucs/sample-apps-react-native-ios-and-android.git .
 
     - path::./:
         inputs:
         - command: install
-        # - npm_version: 6.4.0
+    after_run:
+    - test-with-npm-version
+  test-with-npm-version:
+    steps:
+    - path::./:
+        inputs:
+        - command: install
+        - npm_version: 6.2.0
+    after_run:
+    - test-use-system-npm
 
   # ----------------------------------------------------------------
   # --- workflow to create Release version
