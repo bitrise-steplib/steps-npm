@@ -22,32 +22,35 @@ type Config struct {
 	NpmVersion string `env:"npm_version"`
 }
 
-func getNpmVersionFromPackageJSON() string {
+func getNpmVersionFromPackageJSON() (string, error) {
 	jsonStr, err := fileutil.ReadStringFromFile("package.json")
 	if err != nil {
-		// do not failf in functions other than main
-		failf("No package.json file found", err)
+		return "", fmt.Errorf("package.json file read error: %s", err)
 	}
 
-	return extractNpmVersion(jsonStr)
+	var ver string
+	if ver, err = extractNpmVersion(jsonStr); err != nil {
+		return "", fmt.Errorf("package json content error: %s", err)
+	}
+	return ver, nil
 }
 
-func extractNpmVersion(jsonStr string) string {
+func extractNpmVersion(jsonStr string) (string, error) {
 	type jsonModel struct {
 		Engines struct {
 			Npm string
 		}
 	}
+
 	var m jsonModel
-	// return json error
 	if err := json.Unmarshal([]byte(jsonStr), &m); err != nil {
-		return ""
+		return "", fmt.Errorf("json unmarshal error: %s", err)
 	}
 
-	return m.Engines.Npm
+	return m.Engines.Npm, nil
 }
 
-func getCommandAsSliceForPlatform(os string) []string {
+func createInstallNpmCommand(os string) (*command.Model, error) {
 	var args []string
 	switch os {
 	case "darwin":
@@ -55,13 +58,7 @@ func getCommandAsSliceForPlatform(os string) []string {
 	case "linux":
 		args = []string{"apt-get", "-y", "install", "npm"}
 	}
-	return args
-}
-
-func createInstallNpmCommand(platform string) (*command.Model, error) {
-	// inline the function call below
-	slice := getCommandAsSliceForPlatform(platform)
-	return command.NewFromSlice(slice)
+	return command.NewFromSlice(args)
 }
 
 func installLatestNpm() error {
@@ -117,7 +114,7 @@ func main() {
 	ver = config.NpmVersion
 	if ver == "" {
 		log.Infof("No npm version provided as step input. Checking package.json.")
-		if ver = getNpmVersionFromPackageJSON(); ver == "" {
+		if ver, err = getNpmVersionFromPackageJSON(); err != nil {
 			log.Warnf("No npm version found in package.json! Falling back to installed npm.")
 			if path, err := exec.LookPath("npm"); err != nil {
 				log.Warnf("npm not found on PATH, installing latest version")
