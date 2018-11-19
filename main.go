@@ -70,6 +70,7 @@ func createInstallNpmCommand(os string) (*command.Model, error) {
 	}
 
 	var cmd, err = command.NewFromSlice(args)
+	// command.New(args[0], args[1:])
 	if err != nil {
 		return nil, fmt.Errorf("could not create npm install command: %s", err)
 	}
@@ -93,12 +94,6 @@ func installLatestNpm() (string, error) {
 	return out, nil
 }
 
-func failf(f string, args ...interface{}) {
-	log.Errorf(f, args...)
-	fmt.Println()
-	os.Exit(1)
-}
-
 func runNpmCommand(npmCmd ...string) (string, error) {
 	cmd := command.New("npm", npmCmd...)
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
@@ -106,9 +101,8 @@ func runNpmCommand(npmCmd ...string) (string, error) {
 		return out, fmt.Errorf("error running npm command: %s", err)
 	}
 
-	fmt.Println()
-	log.Printf(cmd.PrintableCommandArgs())
-	fmt.Println()
+	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
+	log.Printf(out)
 
 	return out, nil
 }
@@ -122,6 +116,12 @@ func setNpmVersion(ver string) (string, error) {
 	return out, nil
 }
 
+func failf(f string, args ...interface{}) {
+	log.Errorf(f, args...)
+	fmt.Println()
+	os.Exit(1)
+}
+
 func main() {
 	var config Config
 	if err := stepconf.Parse(&config); err != nil {
@@ -130,10 +130,11 @@ func main() {
 	stepconf.Print(config)
 
 	if config.NpmVersion == "" {
+		fmt.Println()
 		log.Infof("Autodetecting npm version")
 
 		log.Printf("Checking package.json for npm version")
-		ver, err := getNpmVersionFromPackageJSON()
+		ver, err := getNpmVersionFromPackageJSON() // err should be used only for error per definition
 		if err != nil {
 			log.Warnf("No npm version found in package.json")
 
@@ -159,13 +160,24 @@ func main() {
 				}
 				ver = out
 			}
-		}
+		} else {
+			fmt.Println()
+			log.Infof("Setting npm version to %s", ver)
 
-		log.Infof("Setting npm version to %s", ver)
-		out, err := setNpmVersion(ver)
+			out, err := setNpmVersion(ver)
+			if err != nil {
+				log.Errorf(out)
+				failf("Error setting npm version to %s: %s", ver, err)
+			}
+		}
+	} else {
+		fmt.Println()
+		log.Infof("Setting npm version to %s", config.NpmVersion)
+
+		out, err := setNpmVersion(config.NpmVersion)
 		if err != nil {
 			log.Errorf(out)
-			failf("Error setting npm version to %s: %s", ver, err)
+			failf("Error setting npm version to %s: %s", config.NpmVersion, err)
 		}
 	}
 
@@ -175,10 +187,8 @@ func main() {
 		failf("Error running npm command %s: %s", config.Command, err)
 	}
 
-	fmt.Println()
 	log.Donef("$ npm %s", config.Command)
-	fmt.Println()
 	log.Printf(out)
-
+	fmt.Println()
 	log.Successf("Step success")
 }
