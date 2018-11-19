@@ -7,7 +7,7 @@
     "npm": "6.4.1"
   },
   "scripts": {
-    "test": "node heythere.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

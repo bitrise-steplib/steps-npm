@@ -4,21 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+	"runtime"
+
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-steputils/stepconf"
-	"os"
-	"os/exec"
-	"runtime"
 )
-
-type jsonModel struct {
-	Engines struct {
-		Npm string
-	}
-}
 
 // Config model
 type Config struct {
@@ -30,14 +25,21 @@ type Config struct {
 func getNpmVersionFromPackageJSON() string {
 	jsonStr, err := fileutil.ReadStringFromFile("package.json")
 	if err != nil {
+		// do not failf in functions other than main
 		failf("No package.json file found", err)
 	}
 
 	return extractNpmVersion(jsonStr)
 }
 
-func extractNpmVersion(jsonStr string)  string {
+func extractNpmVersion(jsonStr string) string {
+	type jsonModel struct {
+		Engines struct {
+			Npm string
+		}
+	}
 	var m jsonModel
+	// return json error
 	if err := json.Unmarshal([]byte(jsonStr), &m); err != nil {
 		return ""
 	}
@@ -57,12 +59,9 @@ func getCommandAsSliceForPlatform(os string) []string {
 }
 
 func createInstallNpmCommand(platform string) (*command.Model, error) {
+	// inline the function call below
 	slice := getCommandAsSliceForPlatform(platform)
-	cmd, err := command.NewFromSlice(slice)
-	if err != nil {
-		return nil, err
-	}
-	return cmd, nil
+	return command.NewFromSlice(slice)
 }
 
 func installLatestNpm() error {
@@ -70,6 +69,9 @@ func installLatestNpm() error {
 	if err != nil {
 		return err
 	}
+
+	// return the output also -- or put the relevant error message in the returned error
+	// consider the exit status handling!
 	_, err = command.RunCmdAndReturnTrimmedOutput(installNpmCmd.GetCmd())
 	return err
 }
@@ -79,23 +81,15 @@ func failf(f string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func (configs Config) print() {
-	fmt.Println()
-	log.Infof("Configs:")
-	log.Printf(" - Workdir: %s", configs.Workdir)
-	log.Printf(" - Command: %s", configs.Command)
-	log.Printf(" - NpmVersion: %s", configs.NpmVersion)
-	fmt.Println()
-}
-
 func runNpmCommand(npmCmd ...string) (out string, exitCode int, err error) {
 	cmd := command.New("npm", npmCmd...)
 	out, npmErr := cmd.RunAndReturnTrimmedCombinedOutput()
 	log.Infof(cmd.PrintableCommandArgs())
 	if npmErr != nil {
 		if errorutil.IsExitStatusError(npmErr) {
+			// simplify error handling -- remove exit code stuff
 			exitCode, err := errorutil.CmdExitCodeFromError(npmErr)
-			if (err != nil) {
+			if err != nil {
 				return out, 1, err
 			}
 
@@ -108,17 +102,17 @@ func runNpmCommand(npmCmd ...string) (out string, exitCode int, err error) {
 
 func main() {
 	var (
-		config Config
-		ver string
-		out string
-		exitCode int
-		err error 
+		config   Config
+		ver      string
+		out      string
+		exitCode int // we dont need it
+		err      error
 	)
 
 	if err := stepconf.Parse(&config); err != nil {
 		failf("Couldn't create step config: %v\n", err)
 	}
-	config.print()
+	stepconf.Print(config)
 
 	ver = config.NpmVersion
 	if ver == "" {
@@ -137,6 +131,7 @@ func main() {
 		}
 	}
 
+	// do not expose exit code in main and in log messages
 	out, exitCode, err = runNpmCommand("install", "-g", fmt.Sprintf("npm@%s", ver))
 
 	if exitCode != 0 {
@@ -147,7 +142,7 @@ func main() {
 	}
 	log.Infof("npm update output: %s", out)
 
-	out, exitCode, err = runNpmCommand("run", config.Command)
+	out, exitCode, err = runNpmCommand(config.Command)
 	if exitCode != 0 {
 		failf("npm exit code %s, error: %s", exitCode, err)
 	}

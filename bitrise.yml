@@ -4,6 +4,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
   - RELEASE_VERSION: 0.9.1
+  - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
 
 workflows:
   lint:
@@ -29,9 +30,16 @@ workflows:
         inputs:
         - path: ./_tmp
         - is_create_path: true
+    - script:
+        inputs:
+        - content: |
+            #!/bin/bash
+            # git clone react native sample repo and use pkg json instead of hardcoded file
+            cp ../package.json .
+
     - path::./:
         inputs:
-        - command: test
+        - command: install
         - npm_version: 6.4.0
 
   # ----------------------------------------------------------------
