@@ -47,7 +47,7 @@ func extractNpmVersion(jsonStr string) (string, error) {
 	}
 
 	if m.Engines.Npm == "" {
-		return "", fmt.Errorf("npm version constraint not found")
+		return "", nil
 	}
 
 	v, err := semver.NewVersion(m.Engines.Npm)
@@ -55,9 +55,7 @@ func extractNpmVersion(jsonStr string) (string, error) {
 		return "", fmt.Errorf("engines.npm is not valid semver string")
 	}
 
-	ver := v.String()
-
-	return ver, nil
+	return v.String(), nil
 }
 
 func createInstallNpmCommand(os string) (*command.Model, error) {
@@ -69,13 +67,7 @@ func createInstallNpmCommand(os string) (*command.Model, error) {
 		args = []string{"apt-get", "-y", "install", "npm"}
 	}
 
-	var cmd, err = command.NewFromSlice(args)
-	// command.New(args[0], args[1:])
-	if err != nil {
-		return nil, fmt.Errorf("could not create npm install command: %s", err)
-	}
-
-	return cmd, nil
+	return command.New(args[0], args[1:]...), nil
 }
 
 func installLatestNpm() (string, error) {
@@ -94,7 +86,7 @@ func installLatestNpm() (string, error) {
 	return out, nil
 }
 
-func runNpmCommand(npmCmd ...string) (string, error) {
+func runAndLog(npmCmd ...string) (string, error) {
 	cmd := command.New("npm", npmCmd...)
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 	if err != nil {
@@ -108,7 +100,7 @@ func runNpmCommand(npmCmd ...string) (string, error) {
 }
 
 func setNpmVersion(ver string) (string, error) {
-	out, err := runNpmCommand("install", "-g", fmt.Sprintf("npm@%s", ver))
+	out, err := runAndLog("install", "-g", fmt.Sprintf("npm@%s", ver))
 	if err != nil {
 		return out, fmt.Errorf("error running npm install: %s", err)
 	}
@@ -125,7 +117,7 @@ func failf(f string, args ...interface{}) {
 func main() {
 	var config Config
 	if err := stepconf.Parse(&config); err != nil {
-		failf("error parsing step config: %v", err)
+		failf("error parsing step config: %s", err)
 	}
 	stepconf.Print(config)
 
@@ -134,8 +126,12 @@ func main() {
 		log.Infof("Autodetecting npm version")
 
 		log.Printf("Checking package.json for npm version")
-		ver, err := getNpmVersionFromPackageJSON() // err should be used only for error per definition
+		ver, err := getNpmVersionFromPackageJSON()
 		if err != nil {
+			failf("error processing package.json: %s", err)
+		}
+
+		if ver == "" {
 			log.Warnf("No npm version found in package.json")
 
 			log.Printf("Locating system installed npm")
@@ -154,13 +150,14 @@ func main() {
 				log.Printf(out)
 			} else {
 				log.Printf("npm found at %s", path)
-				out, err := runNpmCommand("--version")
+				out, err := runAndLog("--version")
 				if err != nil {
 					log.Warnf("Error getting installed npm version: %s", err)
 				}
 				ver = out
 			}
 		} else {
+			fmt.Println(ver)
 			fmt.Println()
 			log.Infof("Setting npm version to %s", ver)
 
@@ -181,14 +178,14 @@ func main() {
 		}
 	}
 
-	out, err := runNpmCommand(config.Command)
+	fmt.Println()
+	log.Infof("Running user provided command")
+	out, err := runAndLog(config.Command)
 	if err != nil {
 		log.Errorf(out)
-		failf("Error running npm command %s: %s", config.Command, err)
+		failf("Error running command %s: %s", config.Command, err)
 	}
 
-	log.Donef("$ npm %s", config.Command)
-	log.Printf(out)
 	fmt.Println()
 	log.Successf("Step success")
 }

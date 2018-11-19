@@ -28,7 +28,6 @@ workflows:
         inputs:
         - content: |
             #!/bin/bash
-            # git clone react native sample repo and use pkg json instead of hardcoded file
             git clone https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android.git .
 
     - path::./:
