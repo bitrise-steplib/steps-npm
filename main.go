@@ -72,19 +72,6 @@ func createInstallNpmCommand() (*command.Model, error) {
 	return command.New(args[0], args[1:]...), nil
 }
 
-// func installLatestNpm() (string, error) {
-// 	cmd, err := createInstallNpmCommand()
-
-// 	log.Donef(cmd.PrintableCommandArgs())
-// 	out, err := command.RunCmdAndReturnTrimmedOutput(cmd.GetCmd())
-// 	if err != nil {
-// 		log.Errorf(out)
-// 		return out, fmt.Errorf("error running npm install: %s", err)
-// 	}
-
-// 	return out, nil
-// }
-
 func runAndLog(cmd *command.Model) (string, error) {
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
@@ -107,6 +94,56 @@ func setNpmVersion(ver string) (string, error) {
 	return out, nil
 }
 
+func readFromPackageJSON(workdir string) string {
+	fmt.Println()
+	log.Infof("Autodetecting npm version")
+
+	log.Printf("Checking package.json for npm version")
+	path := fmt.Sprintf("%s/package.json", workdir)
+	ver, err := getNpmVersionFromPackageJSON(path)
+	if err != nil {
+		// failf("error processing package.json: %s", err)
+		return ""
+	}
+
+	return ver
+}
+
+func systemDefined() string {
+	log.Warnf("No npm version found in package.json")
+
+	log.Printf("Locating system installed npm")
+	path, err := exec.LookPath("npm")
+	if err == nil {
+		log.Printf("npm found at %s", path)
+
+		cmd := command.New("npm", "--version")
+		out, err := runAndLog(cmd)
+		if err != nil {
+			log.Warnf("Error getting installed npm version: %s", err)
+		}
+		return out
+
+	}
+
+	return ""
+}
+
+func installnpm() {
+	log.Warnf("npm not found on PATH")
+
+	log.Printf("Installing latest npm")
+
+	cmd, err := createInstallNpmCommand()
+	out, err := runAndLog(cmd)
+	if err != nil {
+		log.Errorf(out) // maybe put error logging into runAndLog too?
+		failf("Error installing npm: %s", err)
+	}
+
+	log.Printf(out)
+}
+
 func failf(f string, args ...interface{}) {
 	log.Errorf(f, args...)
 	fmt.Println()
@@ -120,94 +157,39 @@ func main() {
 	}
 	stepconf.Print(config)
 
-	// toInstall := ""
-	// userDefined := ""
+	toInstall := false
+	userDefined := config.NpmVersion
+	ver := userDefined
 
-	// if userDefined != "" {
-	// 	toInstall = userDefined
-	// }
+	if ver == "" {
+		ver = readFromPackageJSON(config.Workdir)
+	}
 
-	// if toInstall == "" {
-	// 	toInstall = readFromPackageJSON()
-	// }
-
-	// if toInstall == "" {
-	// 	if systemDefined() == "" {
-	// 		toInstall = "latest"
-	// 	}
-	// }
-
-	// if toInstall != "" {
-	// 	installnpm(toInstall)
-	// }
-
-	if config.NpmVersion == "" {
-		fmt.Println()
-		log.Infof("Autodetecting npm version")
-
-		log.Printf("Checking package.json for npm version")
-		path := fmt.Sprintf("%s/package.json", config.Workdir)
-		ver, err := getNpmVersionFromPackageJSON(path)
-		if err != nil {
-			failf("error processing package.json: %s", err)
+	if ver == "" {
+		if systemDefined() == "" {
+			ver = "latest"
+			toInstall = true
 		}
+	}
 
-		if ver == "" {
-			log.Warnf("No npm version found in package.json")
+	if toInstall {
+		installnpm()
+	}
 
-			log.Printf("Locating system installed npm")
-			path, err := exec.LookPath("npm")
-			if err != nil {
-				log.Warnf("npm not found on PATH")
+	fmt.Println()
+	log.Infof("Setting npm version to %s", config.NpmVersion)
 
-				log.Printf("Installing latest npm")
-				ver = "latest"
-
-				cmd, err := createInstallNpmCommand()
-				out, err := runAndLog(cmd)
-				if err != nil {
-					log.Errorf(out) // maybe put error logging into runAndLog too?
-					failf("Error installing npm: %s", err)
-				}
-
-				log.Printf(out)
-			} else {
-				log.Printf("npm found at %s", path)
-
-				cmd := command.New("npm", "--version")
-				out, err := runAndLog(cmd)
-				if err != nil {
-					log.Warnf("Error getting installed npm version: %s", err)
-				}
-				ver = out
-			}
-		} else {
-			fmt.Println(ver)
-			fmt.Println()
-			log.Infof("Setting npm version to %s", ver)
-
-			out, err := setNpmVersion(ver)
-			if err != nil {
-				log.Errorf(out)
-				failf("Error setting npm version to %s: %s", ver, err)
-			}
-		}
-	} else {
-		fmt.Println()
-		log.Infof("Setting npm version to %s", config.NpmVersion)
-
-		out, err := setNpmVersion(config.NpmVersion)
-		if err != nil {
-			log.Errorf(out)
-			failf("Error setting npm version to %s: %s", config.NpmVersion, err)
-		}
+	out, err := setNpmVersion(config.NpmVersion)
+	if err != nil {
+		log.Errorf(out)
+		failf("Error setting npm version to %s: %s", config.NpmVersion, err)
 	}
 
 	fmt.Println()
 	log.Infof("Running user provided command")
 
 	cmd := command.New("npm", config.Command)
-	out, err := runAndLog(cmd)
+	out, err = runAndLog(cmd)
 	if err != nil {
 		log.Errorf(out)
 		failf("Error running command %s: %s", config.Command, err)

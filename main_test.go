@@ -23,7 +23,7 @@ func TestExtractNpmVersion(t *testing.T) {
 			t.Errorf(`getNpmVersionFromPackageJson(%s) returned %s instead of %s`, tc.pkgJSON, got, tc.want)
 		}
 
-		if tc.hasE && gotE != nil {
+		if !tc.hasE && gotE != nil {
 			t.Errorf(`getNpmVersionFromPackageJson(%s) returned with error %s`, tc.pkgJSON, gotE)
 		}
 	}
