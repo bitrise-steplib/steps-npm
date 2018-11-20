@@ -21,13 +21,13 @@ type Config struct {
 	NpmVersion string `env:"npm_version"`
 }
 
-func getNpmVersionFromPackageJSON() (string, error) {
-	jsonStr, err := fileutil.ReadStringFromFile("package.json")
+func getNpmVersionFromPackageJSON(path string) (string, error) {
+	jsonStr, err := fileutil.ReadStringFromFile(path)
 	if err != nil {
 		return "", fmt.Errorf("package.json file read error: %s", err)
 	}
 
-	var ver string
+	var ver string // how to resolve declaration hell?
 	if ver, err = extractNpmVersion(jsonStr); err != nil {
 		return "", fmt.Errorf("package json content error: %s", err)
 	}
@@ -41,7 +41,7 @@ func extractNpmVersion(jsonStr string) (string, error) {
 		}
 	}
 
-	var m jsonModel
+	var m jsonModel // how abot pkgJSON? package is overloaded and a bit confusing
 	if err := json.Unmarshal([]byte(jsonStr), &m); err != nil {
 		return "", fmt.Errorf("json unmarshal error: %s", err)
 	}
@@ -58,38 +58,40 @@ func extractNpmVersion(jsonStr string) (string, error) {
 	return v.String(), nil
 }
 
-func createInstallNpmCommand(os string) *command.Model {
+func createInstallNpmCommand() (*command.Model, error) {
 	var args []string
-	switch os {
+	switch runtime.GOOS {
 	case "darwin":
 		args = []string{"brew", "install", "node"}
 	case "linux":
 		args = []string{"apt-get", "-y", "install", "npm"}
+	default:
+		return nil, fmt.Errorf("operating system: %s", runtime.GOOS)
 	}
 
-	return command.New(args[0], args[1:]...)
+	return command.New(args[0], args[1:]...), nil
 }
 
-func installLatestNpm() (string, error) {
-	cmd := createInstallNpmCommand(runtime.GOOS)
+// func installLatestNpm() (string, error) {
+// 	cmd, err := createInstallNpmCommand()
 
-	var out string
-	out, err := command.RunCmdAndReturnTrimmedOutput(cmd.GetCmd())
+// 	log.Donef(cmd.PrintableCommandArgs())
+// 	out, err := command.RunCmdAndReturnTrimmedOutput(cmd.GetCmd())
+// 	if err != nil {
+// 		log.Errorf(out)
+// 		return out, fmt.Errorf("error running npm install: %s", err)
+// 	}
 
-	if err != nil {
-		return out, fmt.Errorf("error running npm install: %s", err)
-	}
-
-	return out, nil
-}
+// 	return out, nil
+// }
 
 func runAndLog(cmd *command.Model) (string, error) {
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
+	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 	if err != nil {
 		return out, fmt.Errorf("error running npm command: %s", err)
 	}
 
-	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 	log.Printf(out)
 
 	return out, nil
@@ -118,12 +120,34 @@ func main() {
 	}
 	stepconf.Print(config)
 
+	// toInstall := ""
+	// userDefined := ""
+
+	// if userDefined != "" {
+	// 	toInstall = userDefined
+	// }
+
+	// if toInstall == "" {
+	// 	toInstall = readFromPackageJSON()
+	// }
+
+	// if toInstall == "" {
+	// 	if systemDefined() == "" {
+	// 		toInstall = "latest"
+	// 	}
+	// }
+
+	// if toInstall != "" {
+	// 	installnpm(toInstall)
+	// }
+
 	if config.NpmVersion == "" {
 		fmt.Println()
 		log.Infof("Autodetecting npm version")
 
 		log.Printf("Checking package.json for npm version")
-		ver, err := getNpmVersionFromPackageJSON()
+		path := fmt.Sprintf("%s/package.json", config.Workdir)
+		ver, err := getNpmVersionFromPackageJSON(path)
 		if err != nil {
 			failf("error processing package.json: %s", err)
 		}
@@ -139,9 +163,10 @@ func main() {
 				log.Printf("Installing latest npm")
 				ver = "latest"
 
-				out, err := runAndLog(createInstallNpmCommand(runtime.GOOS))
+				cmd, err := createInstallNpmCommand()
+				out, err := runAndLog(cmd)
 				if err != nil {
-					log.Errorf(out)
+					log.Errorf(out) // maybe put error logging into runAndLog too?
 					failf("Error installing npm: %s", err)
 				}
 
