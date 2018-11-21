@@ -34,4 +34,4 @@ inputs:
   - npm_version:
     opts:
       title: Version of npm to use
-      description: Lorem ipsum
+      description: Set this value to the version of npm that is required to run the command. Must be a valid semver string.

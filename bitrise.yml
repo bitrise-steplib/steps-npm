@@ -28,7 +28,7 @@ workflows:
         inputs:
         - content: |
             #!/bin/bash
-            git clone https://github.com/lszucs/sample-apps-react-native-ios-and-android.git .
+            git clone https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android .
 
     - path::./:
         inputs:
