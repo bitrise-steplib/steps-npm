@@ -9,11 +9,11 @@ host_os_tags:
 type_tags:
 - utility
 deps:
-  brew:
-  - name: node
   apt_get:
   - name: nodejs
-  - name: npm
+toolkit:
+  go:
+    package_name: github.com/bitrise-steplib/steps-npm
 inputs:
   - workdir: $BITRISE_SOURCE_DIR
     opts:
@@ -34,3 +34,7 @@ inputs:
         - `install` -> `npm install`
         - `install -g cordova` -> `npm install -g cordova`
       is_required: true
+  - npm_version:
+    opts:
+      title: Version of npm to use
+      description: Set this value to the version of npm that is required to run the command. Must be a valid semver string.
