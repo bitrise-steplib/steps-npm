@@ -54,7 +54,7 @@ func extractNpmVersion(jsonStr string) (string, error) {
 
 	v, err := semver.NewVersion(m.Engines.Npm)
 	if err != nil {
-		return "", fmt.Errorf("engines.npm is not valid semver string")
+		return "", fmt.Errorf("`%s` is not valid semver string", m.Engines.Npm)
 	}
 
 	return v.String(), nil
@@ -68,7 +68,7 @@ func createInstallNpmCommand() (*command.Model, error) {
 	case "linux":
 		args = []string{"apt-get", "-y", "install", "npm"}
 	default:
-		return nil, fmt.Errorf("operating system: %s", runtime.GOOS)
+		return nil, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
 
 	return command.New(args[0], args[1:]...), nil

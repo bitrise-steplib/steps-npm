@@ -8,6 +8,9 @@ host_os_tags:
 - osx-10.10
 type_tags:
 - utility
+deps:
+  apt_get:
+  - name: nodejs
 toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-npm
