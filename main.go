@@ -8,11 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/bitrise-io/go-utils/pathutil"
-
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	semver "github.com/hashicorp/go-version"
 )
@@ -30,21 +29,21 @@ func getNpmVersionFromPackageJSON(path string) (string, error) {
 		return "", fmt.Errorf("package.json file read error: %s", err)
 	}
 
-	var ver string // how to resolve declaration hell?
-	if ver, err = extractNpmVersion(jsonStr); err != nil {
+	ver, err := extractNpmVersion(jsonStr)
+	if err != nil {
 		return "", fmt.Errorf("package json content error: %s", err)
 	}
 	return ver, nil
 }
 
 func extractNpmVersion(jsonStr string) (string, error) {
-	type jsonModel struct {
+	type pkgJSON struct {
 		Engines struct {
 			Npm string
 		}
 	}
 
-	var m jsonModel // how abot pkgJSON? package is overloaded and a bit confusing
+	var m pkgJSON
 	if err := json.Unmarshal([]byte(jsonStr), &m); err != nil {
 		return "", fmt.Errorf("json unmarshal error: %s", err)
 	}
@@ -128,7 +127,6 @@ func installnpm() {
 	cmd, err := createInstallNpmCommand()
 	out, err := runAndLog(cmd)
 	if err != nil {
-		log.Errorf(out) // maybe put error logging into runAndLog too?
 		failf("Error installing npm: %s", err)
 	}
 
