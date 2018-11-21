@@ -96,14 +96,14 @@ func setNpmVersion(ver string) (string, error) {
 	return out, nil
 }
 
-func readFromPackageJSON(workdir string) string {
+func readFromPackageJSON(workdir string) (string, error) {
 	path := filepath.Join(workdir, "package.json")
 	ver, err := getNpmVersionFromPackageJSON(path)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return ver
+	return ver, nil
 }
 
 func systemDefined() (string, error) {
@@ -123,12 +123,15 @@ func systemDefined() (string, error) {
 	return "", nil
 }
 
-func installnpm() {
+func installnpm() error {
 	cmd, err := createInstallNpmCommand()
-	_, err = runAndLog(cmd)
 	if err != nil {
-		failf("Error installing npm: %s", err)
+		return err
 	}
+	if _, err := runAndLog(cmd); err != nil {
+		return err
+	}
+	return nil
 }
 
 func failf(f string, args ...interface{}) {
@@ -159,40 +162,51 @@ func main() {
 
 	toInstall := false
 	userDefined := config.NpmVersion
+	systemVer := ""
 	toSet := userDefined
 
 	if toSet == "" {
 		fmt.Println()
 		log.Infof("Autodetecting npm version")
 		log.Printf("Checking package.json for npm version")
-		toSet = readFromPackageJSON(workdir)
+		toSet, err = readFromPackageJSON(workdir)
+		if err != nil {
+			failf("error reading npm version from package.json: %s", err)
+		}
 	}
 
 	if toSet == "" {
 		log.Warnf("No npm version found in package.json")
 		log.Printf("Locating system installed npm")
-		toSet, err = systemDefined()
+		systemVer, err = systemDefined()
 		if err != nil {
 			failf("error getting installed npm version: %s", err)
 		}
-		if toSet == "" {
+		if systemVer == "" {
+			log.Warnf("npm not found on PATH")
 			toSet = "latest"
 			toInstall = true
 		}
 	}
 
 	if toInstall {
-		log.Warnf("npm not found on PATH")
-		log.Printf("Installing latest npm")
-		installnpm()
+		fmt.Println()
+		log.Infof("Ensuring npm version %s", toSet)
+
+		err := installnpm()
+		if err != nil {
+			failf("Error installing npm: %s", err)
+		}
 	}
 
-	fmt.Println()
-	log.Infof("Ensuring npm version %s", toSet)
+	if toSet != "" {
+		fmt.Println()
+		log.Infof("Ensuring npm version %s", toSet)
 
-	_, err = setNpmVersion(toSet)
-	if err != nil {
-		failf("Error setting npm version to %s: %s", toSet, err)
+		_, err = setNpmVersion(toSet)
+		if err != nil {
+			failf("Error setting npm version to %s: %s", toSet, err)
+		}
 	}
 
 	fmt.Println()
