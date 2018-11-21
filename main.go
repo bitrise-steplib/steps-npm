@@ -97,7 +97,7 @@ func setNpmVersion(ver string) (string, error) {
 }
 
 func readFromPackageJSON(workdir string) string {
-	path := filepath.Join(os.Getenv("ORIG_BITRISE_SOURCE_DIR"), "package.json")
+	path := filepath.Join(workdir, "package.json")
 	ver, err := getNpmVersionFromPackageJSON(path)
 	if err != nil {
 		return ""
@@ -106,7 +106,7 @@ func readFromPackageJSON(workdir string) string {
 	return ver
 }
 
-func systemDefined() string {
+func systemDefined() (string, error) {
 	path, err := exec.LookPath("npm")
 	if err == nil {
 		log.Printf("npm found at %s", path)
@@ -114,23 +114,21 @@ func systemDefined() string {
 		cmd := command.New("npm", "--version")
 		out, err := runAndLog(cmd)
 		if err != nil {
-			log.Warnf("Error getting installed npm version: %s", err)
+			return "", err
 		}
-		return out
 
+		return out, nil
 	}
 
-	return ""
+	return "", nil
 }
 
 func installnpm() {
 	cmd, err := createInstallNpmCommand()
-	out, err := runAndLog(cmd)
+	_, err = runAndLog(cmd)
 	if err != nil {
 		failf("Error installing npm: %s", err)
 	}
-
-	log.Printf(out)
 }
 
 func failf(f string, args ...interface{}) {
@@ -150,7 +148,12 @@ func main() {
 	if err != nil {
 		failf("error normalizing workdir path: %s", err)
 	}
-	if _, err := os.Stat(workdir); os.IsNotExist(err) {
+
+	exists, err := pathutil.IsDirExists(workdir)
+	if err != nil {
+		failf("error validating workdir `%s`: %s", workdir, err)
+	}
+	if !exists {
 		failf("specified path `%s` does not exist", workdir)
 	}
 
@@ -168,7 +171,10 @@ func main() {
 	if toSet == "" {
 		log.Warnf("No npm version found in package.json")
 		log.Printf("Locating system installed npm")
-		toSet = systemDefined()
+		toSet, err = systemDefined()
+		if err != nil {
+			failf("error getting installed npm version: %s", err)
+		}
 		if toSet == "" {
 			toSet = "latest"
 			toInstall = true
@@ -184,9 +190,8 @@ func main() {
 	fmt.Println()
 	log.Infof("Ensuring npm version %s", toSet)
 
-	out, err := setNpmVersion(toSet)
+	_, err = setNpmVersion(toSet)
 	if err != nil {
-		log.Errorf(out)
 		failf("Error setting npm version to %s: %s", toSet, err)
 	}
 
@@ -195,9 +200,8 @@ func main() {
 
 	cmd := command.New("npm", config.Command)
 	cmd.SetDir(workdir)
-	out, err = runAndLog(cmd)
+	_, err = runAndLog(cmd)
 	if err != nil {
-		log.Errorf(out)
 		failf("Error running command %s: %s", config.Command, err)
 	}
 

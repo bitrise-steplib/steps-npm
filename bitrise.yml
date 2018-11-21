@@ -25,20 +25,30 @@ workflows:
         - path: ./_tmp
         - is_create_path: true
     - script:
+        title: checkout sample npm project
         inputs:
         - content: |
             #!/bin/bash
             git clone https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android .
-
     - path::./:
+        title: Test with system provided npm
+        inputs:
+        - command: install
+    - script:
+        title: Generate npm version specifier into package.json
+        inputs:
+        - content: |
+            #!/bin/bash
+            # insert npm version specifier block into package.json
+            awk '/SampleAppsReactNativeAndroid/{print "{\"engines\":{\"npm\":\"6.0.0\"}}"}1' package.json
+    - path::./:
+        title: Test with fallback npm in package json
         inputs:
         - command: install
     - path::./:
+        title: Test with user provided npm version
         inputs:
-        - command: install
         - npm_version: 6.2.0
-    - path::./:
-        inputs:
         - command: --version
         - workdir: .
 
