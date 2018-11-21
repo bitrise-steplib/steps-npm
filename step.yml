@@ -10,7 +10,7 @@ type_tags:
 - utility
 toolkit:
   go:
-    package_name: github.com/lszucs/steps-npm
+    package_name: github.com/bitrise-steplib/steps-npm
 inputs:
   - workdir: $BITRISE_SOURCE_DIR
     opts:

@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+
+	"github.com/bitrise-io/go-utils/pathutil"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
@@ -99,10 +102,9 @@ func readFromPackageJSON(workdir string) string {
 	log.Infof("Autodetecting npm version")
 
 	log.Printf("Checking package.json for npm version")
-	path := fmt.Sprintf("%s/package.json", workdir)
+	path := filepath.Join(os.Getenv("ORIG_BITRISE_SOURCE_DIR"), "package.json")
 	ver, err := getNpmVersionFromPackageJSON(path)
 	if err != nil {
-		// failf("error processing package.json: %s", err)
 		return ""
 	}
 
@@ -157,17 +159,26 @@ func main() {
 	}
 	stepconf.Print(config)
 
-	toInstall := false
-	userDefined := config.NpmVersion
-	ver := userDefined
-
-	if ver == "" {
-		ver = readFromPackageJSON(config.Workdir)
+	workdir, err := pathutil.AbsPath(config.Workdir)
+	if err != nil {
+		failf("error normalizing workdir path: %s", err)
+	}
+	if _, err := os.Stat(workdir); os.IsNotExist(err) {
+		failf("specified path `%s` does not exist", workdir)
 	}
 
-	if ver == "" {
-		if systemDefined() == "" {
-			ver = "latest"
+	toInstall := false
+	userDefined := config.NpmVersion
+	toSet := userDefined
+
+	if toSet == "" {
+		toSet = readFromPackageJSON(workdir)
+	}
+
+	if toSet == "" {
+		toSet = systemDefined()
+		if toSet == "" {
+			toSet = "latest"
 			toInstall = true
 		}
 	}
@@ -177,18 +188,19 @@ func main() {
 	}
 
 	fmt.Println()
-	log.Infof("Setting npm version to %s", config.NpmVersion)
+	log.Infof("Ensuring npm version %s", toSet)
 
-	out, err := setNpmVersion(config.NpmVersion)
+	out, err := setNpmVersion(toSet)
 	if err != nil {
 		log.Errorf(out)
-		failf("Error setting npm version to %s: %s", config.NpmVersion, err)
+		failf("Error setting npm version to %s: %s", toSet, err)
 	}
 
 	fmt.Println()
 	log.Infof("Running user provided command")
 
 	cmd := command.New("npm", config.Command)
+	cmd.SetDir(workdir)
 	out, err = runAndLog(cmd)
 	if err != nil {
 		log.Errorf(out)

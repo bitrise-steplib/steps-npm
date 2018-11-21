@@ -37,6 +37,10 @@ workflows:
         inputs:
         - command: install
         - npm_version: 6.2.0
+    - path::./:
+        inputs:
+        - command: --version
+        - workdir: .
 
   # ----------------------------------------------------------------
   # --- workflow to create Release version
