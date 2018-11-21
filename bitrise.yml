@@ -40,7 +40,11 @@ workflows:
         - content: |
             #!/bin/bash
             # insert npm version specifier block into package.json
-            awk '/SampleAppsReactNativeAndroid/{print "{\"engines\":{\"npm\":\"6.0.0\"}}"}1' package.json
+            # sed  '/SampleAppsReactNativeAndroid]/i "engines":{"npm":"6.0.0"},' package.json
+            mv package.json package.json.old
+            awk '/SampleAppsReactNativeAndroid/{print "\"engines\":{\"npm\":\"6.0.0\"},"}1' package.json.old > package.json
+            echo "generated package.json:"
+            cat package.json
     - path::./:
         title: Test with fallback npm in package json
         inputs:
