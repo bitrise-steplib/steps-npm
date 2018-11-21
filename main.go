@@ -54,7 +54,7 @@ func extractNpmVersion(jsonStr string) (string, error) {
 
 	v, err := semver.NewVersion(m.Engines.Npm)
 	if err != nil {
-		return "", fmt.Errorf("`%s` is not valid semver string", m.Engines.Npm)
+		return "", fmt.Errorf("`%s` is not valid semver string: %s", m.Engines.Npm, err)
 	}
 
 	return v.String(), nil
@@ -98,40 +98,19 @@ func setNpmVersion(ver string) (string, error) {
 
 func readFromPackageJSON(workdir string) (string, error) {
 	path := filepath.Join(workdir, "package.json")
-	ver, err := getNpmVersionFromPackageJSON(path)
-	if err != nil {
-		return "", err
-	}
 
-	return ver, nil
+	return getNpmVersionFromPackageJSON(path)
 }
 
 func systemDefined() (string, error) {
-	path, err := exec.LookPath("npm")
-	if err == nil {
+	if path, err := exec.LookPath("npm"); err == nil {
 		log.Printf("npm found at %s", path)
 
 		cmd := command.New("npm", "--version")
-		out, err := runAndLog(cmd)
-		if err != nil {
-			return "", err
-		}
-
-		return out, nil
+		return runAndLog(cmd)
 	}
 
 	return "", nil
-}
-
-func installnpm() error {
-	cmd, err := createInstallNpmCommand()
-	if err != nil {
-		return err
-	}
-	if _, err := runAndLog(cmd); err != nil {
-		return err
-	}
-	return nil
 }
 
 func failf(f string, args ...interface{}) {
@@ -161,9 +140,7 @@ func main() {
 	}
 
 	toInstall := false
-	userDefined := config.NpmVersion
-	systemVer := ""
-	toSet := userDefined
+	toSet := config.NpmVersion
 
 	if toSet == "" {
 		fmt.Println()
@@ -178,7 +155,8 @@ func main() {
 	if toSet == "" {
 		log.Warnf("No npm version found in package.json")
 		log.Printf("Locating system installed npm")
-		systemVer, err = systemDefined()
+
+		systemVer, err := systemDefined()
 		if err != nil {
 			failf("error getting installed npm version: %s", err)
 		}
@@ -193,8 +171,11 @@ func main() {
 		fmt.Println()
 		log.Infof("Ensuring npm version %s", toSet)
 
-		err := installnpm()
+		cmd, err := createInstallNpmCommand()
 		if err != nil {
+			failf("Error installing npm: %s", err)
+		}
+		if _, err := runAndLog(cmd); err != nil {
 			failf("Error installing npm: %s", err)
 		}
 	}
@@ -203,8 +184,7 @@ func main() {
 		fmt.Println()
 		log.Infof("Ensuring npm version %s", toSet)
 
-		_, err = setNpmVersion(toSet)
-		if err != nil {
+		if _, err := setNpmVersion(toSet); err != nil {
 			failf("Error setting npm version to %s: %s", toSet, err)
 		}
 	}
@@ -214,8 +194,7 @@ func main() {
 
 	cmd := command.New("npm", config.Command)
 	cmd.SetDir(workdir)
-	_, err = runAndLog(cmd)
-	if err != nil {
+	if _, err := runAndLog(cmd); err != nil {
 		failf("Error running command %s: %s", config.Command, err)
 	}
 
