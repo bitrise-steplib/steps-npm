@@ -98,10 +98,6 @@ func setNpmVersion(ver string) (string, error) {
 }
 
 func readFromPackageJSON(workdir string) string {
-	fmt.Println()
-	log.Infof("Autodetecting npm version")
-
-	log.Printf("Checking package.json for npm version")
 	path := filepath.Join(os.Getenv("ORIG_BITRISE_SOURCE_DIR"), "package.json")
 	ver, err := getNpmVersionFromPackageJSON(path)
 	if err != nil {
@@ -112,9 +108,6 @@ func readFromPackageJSON(workdir string) string {
 }
 
 func systemDefined() string {
-	log.Warnf("No npm version found in package.json")
-
-	log.Printf("Locating system installed npm")
 	path, err := exec.LookPath("npm")
 	if err == nil {
 		log.Printf("npm found at %s", path)
@@ -132,10 +125,6 @@ func systemDefined() string {
 }
 
 func installnpm() {
-	log.Warnf("npm not found on PATH")
-
-	log.Printf("Installing latest npm")
-
 	cmd, err := createInstallNpmCommand()
 	out, err := runAndLog(cmd)
 	if err != nil {
@@ -172,10 +161,15 @@ func main() {
 	toSet := userDefined
 
 	if toSet == "" {
+		fmt.Println()
+		log.Infof("Autodetecting npm version")
+		log.Printf("Checking package.json for npm version")
 		toSet = readFromPackageJSON(workdir)
 	}
 
 	if toSet == "" {
+		log.Warnf("No npm version found in package.json")
+		log.Printf("Locating system installed npm")
 		toSet = systemDefined()
 		if toSet == "" {
 			toSet = "latest"
@@ -184,6 +178,8 @@ func main() {
 	}
 
 	if toInstall {
+		log.Warnf("npm not found on PATH")
+		log.Printf("Installing latest npm")
 		installnpm()
 	}
 
