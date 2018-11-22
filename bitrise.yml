@@ -55,6 +55,17 @@ workflows:
         - npm_version: 6.2.0
         - command: --version
         - workdir: .
+    - script:
+        title: Remove package.json 
+        inputs:
+        - content: |
+            #!/bin/bash
+            echo "removing package.json for testing purposes"
+            rm package.json
+    - path::./:
+        title: Test with no package.json
+        inputs:
+        - command: install
 
   # ----------------------------------------------------------------
   # --- workflow to create Release version
