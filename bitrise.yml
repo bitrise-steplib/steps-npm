@@ -65,6 +65,15 @@ workflows:
         title: Test with no package.json
         inputs:
         - command: install
+    - change-workdir:
+        title: Switch working dir to test
+        run_if: true
+        inputs:
+        - path: ../test
+    - path::./:
+        title: Test with multiple arguments
+        inputs:
+        - command: run test-script --someswitch arg1 arg2 arg3
 
   # ----------------------------------------------------------------
   # --- workflow to create Release version
