@@ -142,7 +142,12 @@ func main() {
 		log.Printf("Checking package.json for npm version")
 
 		path := filepath.Join(workdir, "package.json")
-		if exists, err := pathutil.IsPathExists(path); exists {
+		exists, err := pathutil.IsPathExists(path)
+		if err != nil {
+			failf("error validating package.json path: %s", err)
+		}
+
+		if exists {
 			toSet, err = getNpmVersionFromPackageJSON(path)
 			if err != nil {
 				failf("error reading npm version from package.json: %s", err)
