@@ -96,12 +96,6 @@ func setNpmVersion(ver string) (string, error) {
 	return out, nil
 }
 
-func readFromPackageJSON(workdir string) (string, error) {
-	path := filepath.Join(workdir, "package.json")
-
-	return getNpmVersionFromPackageJSON(path)
-}
-
 func systemDefined() (string, error) {
 	if path, err := exec.LookPath("npm"); err == nil {
 		log.Printf("npm found at %s", path)
@@ -146,14 +140,25 @@ func main() {
 		fmt.Println()
 		log.Infof("Autodetecting npm version")
 		log.Printf("Checking package.json for npm version")
-		toSet, err = readFromPackageJSON(workdir)
+
+		path := filepath.Join(workdir, "package.json")
+		exists, err := pathutil.IsPathExists(path)
 		if err != nil {
-			failf("error reading npm version from package.json: %s", err)
+			failf("error validating package.json path: %s", err)
+		}
+
+		if exists {
+			toSet, err = getNpmVersionFromPackageJSON(path)
+			if err != nil {
+				failf("error reading npm version from package.json: %s", err)
+			}
+		} else {
+			log.Warnf("No package.json found at path: %s", path)
 		}
 	}
 
 	if toSet == "" {
-		log.Warnf("No npm version found in package.json")
+		log.Warnf("Could not read version information from package.json")
 		log.Printf("Locating system installed npm")
 
 		systemVer, err := systemDefined()
