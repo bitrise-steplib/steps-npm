@@ -1,4 +1,7 @@
 {
+    "engines": {
+        "npm": "^5.0.0"
+    },
     "scripts": {
         "test-script": "node test-script.js"
     }
