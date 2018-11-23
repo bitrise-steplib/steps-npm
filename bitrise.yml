@@ -13,6 +13,12 @@ workflows:
     - golint:
     - errcheck:
     - go-test:
+    - script:
+        title: Remove leftover _tmp folder
+        inputs:
+        - content: |
+            #!/bin/bash
+            rm -rf $ORIG_BITRISE_SOURCE_DIR/_tmp
     - change-workdir:
         title: Switch working dir to test / _tmp dir
         description: |-
@@ -69,7 +75,7 @@ workflows:
         title: Switch working dir to test
         run_if: true
         inputs:
-        - path: ../test
+        - path: $ORIG_BITRISE_SOURCE_DIR/test
     - path::./:
         title: Test with multiple arguments
         inputs:

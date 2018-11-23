@@ -14,7 +14,6 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	semver "github.com/hashicorp/go-version"
-
 	"github.com/kballard/go-shellquote"
 )
 
