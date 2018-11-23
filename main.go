@@ -151,7 +151,7 @@ func main() {
 		if exists {
 			toSet, err = getNpmVersionFromPackageJSON(path)
 			if err != nil {
-				failf("error reading npm version from package.json: %s", err)
+				log.Warnf("error getting version: %s", err)
 			}
 		} else {
 			log.Warnf("No package.json found at path: %s", path)
