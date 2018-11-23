@@ -152,11 +152,13 @@ func main() {
 			if err != nil {
 				failf("error reading npm version from package.json: %s", err)
 			}
+		} else {
+			log.Warnf("No package.json found at path: %s", path)
 		}
 	}
 
 	if toSet == "" {
-		log.Warnf("No npm version found in package.json")
+		log.Warnf("Could not read version information from package.json")
 		log.Printf("Locating system installed npm")
 
 		systemVer, err := systemDefined()
