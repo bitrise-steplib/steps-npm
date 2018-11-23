@@ -1,0 +1,5 @@
+{
+    "scripts": {
+        "test-script": "node test-script.js"
+    }
+}

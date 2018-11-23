@@ -14,6 +14,7 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	semver "github.com/hashicorp/go-version"
+	"github.com/kballard/go-shellquote"
 )
 
 // Config model
@@ -197,7 +198,12 @@ func main() {
 	fmt.Println()
 	log.Infof("Running user provided command")
 
-	cmd := command.New("npm", config.Command)
+	args, err := shellquote.Split(config.Command)
+	if err != nil {
+		failf("error preparing command for execution: %s", err)
+	}
+
+	cmd := command.New("npm", args...)
 	cmd.SetDir(workdir)
 	if _, err := runAndLog(cmd); err != nil {
 		failf("Error running command %s: %s", config.Command, err)

@@ -13,6 +13,12 @@ workflows:
     - golint:
     - errcheck:
     - go-test:
+    - script:
+        title: Remove leftover _tmp folder
+        inputs:
+        - content: |
+            #!/bin/bash
+            rm -rf $ORIG_BITRISE_SOURCE_DIR/_tmp
     - change-workdir:
         title: Switch working dir to test / _tmp dir
         description: |-
@@ -65,6 +71,15 @@ workflows:
         title: Test with no package.json
         inputs:
         - command: install
+    - change-workdir:
+        title: Switch working dir to test
+        run_if: true
+        inputs:
+        - path: $ORIG_BITRISE_SOURCE_DIR/test
+    - path::./:
+        title: Test with multiple arguments
+        inputs:
+        - command: run test-script --someswitch arg1 arg2 arg3
 
   # ----------------------------------------------------------------
   # --- workflow to create Release version

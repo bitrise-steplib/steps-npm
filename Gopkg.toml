@@ -12,4 +12,8 @@
 
 [[constraint]]
   name = "github.com/hashicorp/go-version"
-  version = "1.0.0"
+  branch = "master"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/kballard/go-shellquote"
