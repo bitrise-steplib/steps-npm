@@ -75,32 +75,38 @@ func createInstallNpmCommand() (*command.Model, error) {
 	return command.NewWithStandardOuts(args[0], args[1:]...), nil
 }
 
-func runAndLog(cmd *command.Model) (string, error) {
-	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
+func runAndLog(cmd *command.Model) error {
+	err := cmd.Run()
 	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 	if err != nil {
-		return out, fmt.Errorf("error running npm command: %s", err)
+		return fmt.Errorf("error running npm command: %s", err)
 	}
 
-	return out, nil
+	return nil
 }
 
-func setNpmVersion(ver string) (string, error) {
+func setNpmVersion(ver string) error {
 	cmd := command.NewWithStandardOuts("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
-	out, err := runAndLog(cmd)
+	err := runAndLog(cmd)
 	if err != nil {
-		return out, fmt.Errorf("error running npm install: %s", err)
+		return fmt.Errorf("error running npm install: %s", err)
 	}
 
-	return out, nil
+	return nil
 }
 
 func systemDefined() (string, error) {
 	if path, err := exec.LookPath("npm"); err == nil {
 		log.Printf("npm found at %s", path)
 
-		cmd := command.NewWithStandardOuts("npm", "--version")
-		return runAndLog(cmd)
+		cmd := command.New("npm", "--version")
+		log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
+		out, err := cmd.RunAndReturnTrimmedCombinedOutput()
+		if err != nil {
+			return "", fmt.Errorf("error running npm command: %s: %s", err, out)
+		}
+
+		return out, nil
 	}
 
 	return "", nil
@@ -179,7 +185,7 @@ func main() {
 		if err != nil {
 			failf("Error installing npm: %s", err)
 		}
-		if _, err := runAndLog(cmd); err != nil {
+		if err := runAndLog(cmd); err != nil {
 			failf("Error installing npm: %s", err)
 		}
 	}
@@ -188,7 +194,7 @@ func main() {
 		fmt.Println()
 		log.Infof("Ensuring npm version %s", toSet)
 
-		if _, err := setNpmVersion(toSet); err != nil {
+		if err := setNpmVersion(toSet); err != nil {
 			failf("Error setting npm version to %s: %s", toSet, err)
 		}
 	}
@@ -203,7 +209,7 @@ func main() {
 
 	cmd := command.NewWithStandardOuts("npm", args...)
 	cmd.SetDir(workdir)
-	if _, err := runAndLog(cmd); err != nil {
+	if err := runAndLog(cmd); err != nil {
 		failf("Error running command %s: %s", config.Command, err)
 	}
 
