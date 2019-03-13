@@ -72,7 +72,7 @@ func createInstallNpmCommand() (*command.Model, error) {
 		return nil, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
 
-	return command.New(args[0], args[1:]...), nil
+	return command.NewWithStandardOuts(args[0], args[1:]...), nil
 }
 
 func runAndLog(cmd *command.Model) (string, error) {
@@ -82,13 +82,11 @@ func runAndLog(cmd *command.Model) (string, error) {
 		return out, fmt.Errorf("error running npm command: %s", out)
 	}
 
-	log.Printf(out)
-
 	return out, nil
 }
 
 func setNpmVersion(ver string) (string, error) {
-	cmd := command.New("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
+	cmd := command.NewWithStandardOuts("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
 	out, err := runAndLog(cmd)
 	if err != nil {
 		return out, fmt.Errorf("error running npm install: %s", err)
@@ -101,7 +99,7 @@ func systemDefined() (string, error) {
 	if path, err := exec.LookPath("npm"); err == nil {
 		log.Printf("npm found at %s", path)
 
-		cmd := command.New("npm", "--version")
+		cmd := command.NewWithStandardOuts("npm", "--version")
 		return runAndLog(cmd)
 	}
 
@@ -203,7 +201,7 @@ func main() {
 		failf("error preparing command for execution: %s", err)
 	}
 
-	cmd := command.New("npm", args...)
+	cmd := command.NewWithStandardOuts("npm", args...)
 	cmd.SetDir(workdir)
 	if _, err := runAndLog(cmd); err != nil {
 		failf("Error running command %s: %s", config.Command, err)
