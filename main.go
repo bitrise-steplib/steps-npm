@@ -76,9 +76,8 @@ func createInstallNpmCommand() (*command.Model, error) {
 }
 
 func runAndLog(cmd *command.Model) error {
-	err := cmd.Run()
 	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error running npm command: %s", err)
 	}
 
