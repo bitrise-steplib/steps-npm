@@ -79,7 +79,7 @@ func runAndLog(cmd *command.Model) (string, error) {
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 	if err != nil {
-		return out, fmt.Errorf("error running npm command: %s", out)
+		return out, fmt.Errorf("error running npm command: %s", err)
 	}
 
 	return out, nil
