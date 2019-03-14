@@ -11,6 +11,7 @@ import (
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	semver "github.com/hashicorp/go-version"
@@ -72,14 +73,18 @@ func createInstallNpmCommand() (*command.Model, error) {
 		return nil, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
 
-	return command.NewWithStandardOuts(args[0], args[1:]...), nil
+	return command.New(args[0], args[1:]...), nil
 }
 
 func setNpmVersion(ver string) error {
-	cmd := command.NewWithStandardOuts("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
+	cmd := command.New("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
 	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error running npm install: %s", err)
+	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+		if errorutil.IsExitStatusError(err) {
+			return fmt.Errorf("error running npm install: %s", out)
+		} else {
+			return fmt.Errorf("error running npm install: %s", err)
+		}
 	}
 
 	return nil
@@ -93,7 +98,11 @@ func systemDefined() (string, error) {
 		log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 		out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 		if err != nil {
-			return "", fmt.Errorf("error running npm command: %s: %s", err, out)
+			if errorutil.IsExitStatusError(err) {
+				return "", fmt.Errorf("error running npm command: %s", out)
+			} else {
+				return "", fmt.Errorf("error running npm command: %s", err)
+			}
 		}
 
 		return out, nil
