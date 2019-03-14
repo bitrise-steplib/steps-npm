@@ -75,19 +75,10 @@ func createInstallNpmCommand() (*command.Model, error) {
 	return command.NewWithStandardOuts(args[0], args[1:]...), nil
 }
 
-func runAndLog(cmd *command.Model) error {
-	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error running npm command: %s", err)
-	}
-
-	return nil
-}
-
 func setNpmVersion(ver string) error {
 	cmd := command.NewWithStandardOuts("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
-	err := runAndLog(cmd)
-	if err != nil {
+	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
+	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error running npm install: %s", err)
 	}
 
@@ -184,7 +175,7 @@ func main() {
 		if err != nil {
 			failf("Error installing npm: %s", err)
 		}
-		if err := runAndLog(cmd); err != nil {
+		if err := cmd.Run(); err != nil {
 			failf("Error installing npm: %s", err)
 		}
 	}
@@ -208,7 +199,7 @@ func main() {
 
 	cmd := command.NewWithStandardOuts("npm", args...)
 	cmd.SetDir(workdir)
-	if err := runAndLog(cmd); err != nil {
+	if err := cmd.Run(); err != nil {
 		failf("Error running command %s: %s", config.Command, err)
 	}
 
