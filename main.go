@@ -82,9 +82,8 @@ func setNpmVersion(ver string) error {
 	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
 		if errorutil.IsExitStatusError(err) {
 			return fmt.Errorf("error running npm install: %s", out)
-		} else {
-			return fmt.Errorf("error running npm install: %s", err)
 		}
+		return fmt.Errorf("error running npm install: %s", err)
 	}
 
 	return nil
@@ -100,9 +99,8 @@ func systemDefined() (string, error) {
 		if err != nil {
 			if errorutil.IsExitStatusError(err) {
 				return "", fmt.Errorf("error running npm command: %s", out)
-			} else {
-				return "", fmt.Errorf("error running npm command: %s", err)
 			}
+			return "", fmt.Errorf("error running npm command: %s", err)
 		}
 
 		return out, nil
