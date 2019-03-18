@@ -174,6 +174,7 @@ func main() {
 			toSet = "latest"
 			toInstall = true
 		}
+		log.Printf("system npm version: %s", systemVer)
 	}
 
 	if toInstall {
@@ -184,6 +185,7 @@ func main() {
 		if err != nil {
 			failf("Error installing npm: %s", err)
 		}
+		log.Donef("$ %s", cmd.PrintableCommandArgs())
 		if err := cmd.Run(); err != nil {
 			failf("Error installing npm: %s", err)
 		}
@@ -207,6 +209,7 @@ func main() {
 	}
 
 	cmd := command.NewWithStandardOuts("npm", args...)
+	log.Donef("$ %s", cmd.PrintableCommandArgs())
 	cmd.SetDir(workdir)
 	if err := cmd.Run(); err != nil {
 		failf("Error running command %s: %s", config.Command, err)
