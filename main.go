@@ -11,6 +11,7 @@ import (
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	semver "github.com/hashicorp/go-version"
@@ -75,26 +76,17 @@ func createInstallNpmCommand() (*command.Model, error) {
 	return command.New(args[0], args[1:]...), nil
 }
 
-func runAndLog(cmd *command.Model) (string, error) {
-	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
-	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
-	if err != nil {
-		return out, fmt.Errorf("error running npm command: %s", err)
-	}
-
-	log.Printf(out)
-
-	return out, nil
-}
-
-func setNpmVersion(ver string) (string, error) {
+func setNpmVersion(ver string) error {
 	cmd := command.New("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
-	out, err := runAndLog(cmd)
-	if err != nil {
-		return out, fmt.Errorf("error running npm install: %s", err)
+	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
+	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+		if errorutil.IsExitStatusError(err) {
+			return fmt.Errorf("error running npm install: %s", out)
+		}
+		return fmt.Errorf("error running npm install: %s", err)
 	}
 
-	return out, nil
+	return nil
 }
 
 func systemDefined() (string, error) {
@@ -102,7 +94,16 @@ func systemDefined() (string, error) {
 		log.Printf("npm found at %s", path)
 
 		cmd := command.New("npm", "--version")
-		return runAndLog(cmd)
+		log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
+		out, err := cmd.RunAndReturnTrimmedCombinedOutput()
+		if err != nil {
+			if errorutil.IsExitStatusError(err) {
+				return "", fmt.Errorf("error running npm command: %s", out)
+			}
+			return "", fmt.Errorf("error running npm command: %s", err)
+		}
+
+		return out, nil
 	}
 
 	return "", nil
@@ -171,6 +172,7 @@ func main() {
 			toSet = "latest"
 			toInstall = true
 		}
+		log.Printf("system npm version: %s", systemVer)
 	}
 
 	if toInstall {
@@ -181,7 +183,8 @@ func main() {
 		if err != nil {
 			failf("Error installing npm: %s", err)
 		}
-		if _, err := runAndLog(cmd); err != nil {
+		log.Donef("$ %s", cmd.PrintableCommandArgs())
+		if err := cmd.Run(); err != nil {
 			failf("Error installing npm: %s", err)
 		}
 	}
@@ -190,7 +193,7 @@ func main() {
 		fmt.Println()
 		log.Infof("Ensuring npm version %s", toSet)
 
-		if _, err := setNpmVersion(toSet); err != nil {
+		if err := setNpmVersion(toSet); err != nil {
 			failf("Error setting npm version to %s: %s", toSet, err)
 		}
 	}
@@ -203,9 +206,10 @@ func main() {
 		failf("error preparing command for execution: %s", err)
 	}
 
-	cmd := command.New("npm", args...)
+	cmd := command.NewWithStandardOuts("npm", args...)
+	log.Donef("$ %s", cmd.PrintableCommandArgs())
 	cmd.SetDir(workdir)
-	if _, err := runAndLog(cmd); err != nil {
+	if err := cmd.Run(); err != nil {
 		failf("Error running command %s: %s", config.Command, err)
 	}
 
