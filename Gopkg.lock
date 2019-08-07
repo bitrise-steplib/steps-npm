@@ -3,7 +3,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:43b082cf688ce011c5d2b0b7e81d610911e02209fb6ee2e3d206280f560499f1"
+  digest = "1:5e4f167418977858782db1d8820e8c2ccd368c8857e0806bcbd07d0bc09e1e38"
+  name = "github.com/bitrise-io/go-steputils"
+  packages = [
+    "cache",
+    "stepconf",
+    "tools",
+  ]
+  pruneopts = "UT"
+  revision = "f540824d77dfd382ce84fd0ee0a9da2fba1cce0a"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d4b9188d913079f0aecbbacdd0a361b07f5aa3b0f712ea84325550b1da775e02"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -16,27 +28,15 @@
     "pointers",
   ]
   pruneopts = "UT"
-  revision = "d1de0dbcb811588e61362aff67bb700b93c13c17"
+  revision = "fcff02f7bce9d2e56a989e6a78f4f4d12f9b516c"
 
 [[projects]]
-  branch = "master"
-  digest = "1:af7ba84c2a92fb5819d5fe643dfaed48cb6b8704914efe8d8644875b1432e413"
-  name = "github.com/bitrise-tools/go-steputils"
-  packages = [
-    "cache",
-    "stepconf",
-    "tools",
-  ]
-  pruneopts = "UT"
-  revision = "ec226b2359fcd806be64f0ad2217d8e741a1ff11"
-
-[[projects]]
-  branch = "master"
-  digest = "1:14f3dc47ce9fec6a2696a28cf21ffd5aef579584897acfdeb0190bc8cf7b1132"
+  digest = "1:88e0b0baeb9072f0a4afbcf12dda615fc8be001d1802357538591155998da21b"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
   pruneopts = "UT"
-  revision = "192140e6f3e645d971b134d4e35b5191adb9dfd3"
+  revision = "ac23dc3fea5d1a983c43f6a0f6e2c13f0195d8bd"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -50,13 +50,13 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/bitrise-io/go-steputils/cache",
+    "github.com/bitrise-io/go-steputils/stepconf",
     "github.com/bitrise-io/go-utils/command",
     "github.com/bitrise-io/go-utils/errorutil",
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
-    "github.com/bitrise-tools/go-steputils/cache",
-    "github.com/bitrise-tools/go-steputils/stepconf",
     "github.com/hashicorp/go-version",
     "github.com/kballard/go-shellquote",
   ]
