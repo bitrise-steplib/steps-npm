@@ -45,10 +45,9 @@ func cacheNpm(workdir string, cacheLevel cacheLevel) error {
 			}
 			if !exist {
 				log.Debugf("package-lock.json not exists")
-				return nil
 			}
 
-			npmCache.IncludePath(fmt.Sprintf("%s -> %s", localPackageDir, lockFilePath))
+			npmCache.IncludePath(localPackageDir)
 		}
 	case cacheGlobal:
 		{
