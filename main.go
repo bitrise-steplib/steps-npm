@@ -9,10 +9,11 @@ import (
 	"runtime"
 
 	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-steputils/cache"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	semver "github.com/hashicorp/go-version"
 	"github.com/kballard/go-shellquote"
@@ -211,6 +212,14 @@ func main() {
 	cmd.SetDir(workdir)
 	if err := cmd.Run(); err != nil {
 		failf("Error running command %s: %s", config.Command, err)
+	}
+
+	if (len(args) != 0) && (args[0] == "install") {
+		npmCache := cache.New()
+		npmCache.IncludePath(filepath.Join(workdir, "node_modules"))
+		if err := npmCache.Commit(); err != nil {
+			log.Warnf("Failed to mark node_modeules directory to be cached, error: %s", err)
+		}
 	}
 
 	fmt.Println()
