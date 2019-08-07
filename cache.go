@@ -48,7 +48,7 @@ func cacheNpm(workdir string, cacheLevel cacheLevel) error {
 				return nil
 			}
 
-			npmCache.IncludePath(fmt.Sprintf("%s -> %s", localPackageDir, lockFilePath))
+			npmCache.IncludePath(fmt.Sprintf("%s", localPackageDir))
 		}
 	case cacheGlobal:
 		{
