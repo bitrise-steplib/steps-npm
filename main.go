@@ -23,7 +23,7 @@ type Config struct {
 	Workdir    string `env:"workdir"`
 	Command    string `env:"command,required"`
 	NpmVersion string `env:"npm_version"`
-	CacheLevel string `env:"cache_level,opts[none,local,global]"`
+	CacheLevel string `env:"cache_level,opt[none,local,global]"`
 }
 
 func parseCacheLevel(level string) cacheLevel {

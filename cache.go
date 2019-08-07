@@ -33,11 +33,22 @@ func cacheNpm(workdir string, cacheLevel cacheLevel) error {
 			if err != nil {
 				return fmt.Errorf("failed to check directory existence, error: %s", err)
 			}
-			if exist {
-				npmCache.IncludePath(localPackageDir)
-			} else {
+			if !exist {
 				log.Debugf("local node_modules directory does not exist: %s", localPackageDir)
+				return nil
 			}
+
+			lockFilePath := filepath.Join(workdir, "package-lock.json")
+			exist, err = pathutil.IsPathExists(lockFilePath)
+			if err != nil {
+				return fmt.Errorf("failed to check if file exists, error: %s", err)
+			}
+			if !exist {
+				log.Debugf("package-lock.json not exists")
+				return nil
+			}
+
+			npmCache.IncludePath(fmt.Sprintf("%s -> %s", localPackageDir, lockFilePath))
 		}
 	case cacheGlobal:
 		{
@@ -45,20 +56,20 @@ func cacheNpm(workdir string, cacheLevel cacheLevel) error {
 			fmt.Println()
 			log.Donef("$ %s", npmInstallCommand.PrintableCommandArgs())
 
-			out, err := npmInstallCommand.RunAndReturnTrimmedOutput()
+			globalPackageDir, err := npmInstallCommand.RunAndReturnTrimmedOutput()
 			if err != nil {
 				if errorutil.IsExitStatusError(err) {
-					return fmt.Errorf("command failed, output: %s", out)
+					return fmt.Errorf("command failed, output: %s", globalPackageDir)
 				}
 				return fmt.Errorf("failed to run command, error: %s", err)
 			}
 
-			exist, err := pathutil.IsDirExists(out)
+			exist, err := pathutil.IsDirExists(globalPackageDir)
 			if err != nil {
 				return fmt.Errorf("failed to check directory existence, error: %s", err)
 			}
 			if exist {
-				npmCache.IncludePath(out)
+				npmCache.IncludePath(globalPackageDir)
 			} else {
 				log.Debugf("Global npm package directory does not exist: %s", err)
 			}
