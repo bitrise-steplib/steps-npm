@@ -136,6 +136,8 @@ func main() {
 	}
 	stepconf.Print(config)
 
+	log.SetEnableDebugLog(true)
+
 	workdir, err := pathutil.AbsPath(config.Workdir)
 	if err != nil {
 		failf("error normalizing workdir path: %s", err)

@@ -40,12 +40,16 @@ inputs:
       description: Set this value to the version of npm that is required to run the command. Must be a valid semver string.
   - cache_level: "local"
     opts:
+      category: Cache
       title: Set the cache level
-      description: |-
+      description: |
         Set wheter to cache contents of node_modules for packages installed locally and globally.
+
         `global`: Cache global dependencies.
-        `local`: Cache local dependencies
-        `none`: Do not use cache
+
+        `local`: Cache local dependencies.
+
+        `none`: Do not use cache.
       is_required: true
       value_options:
       - "global"
