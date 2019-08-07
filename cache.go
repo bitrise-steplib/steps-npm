@@ -46,6 +46,8 @@ func cacheNpm(workdir string, cacheLevel cacheLevel) error {
 			if !exist {
 				log.Debugf("package-lock.json not exists")
 			}
+			// cache update indicator (package-lock.json can be used for this)
+			// is not used at the moment as it was slower in some tests
 
 			npmCache.IncludePath(localPackageDir)
 		}
