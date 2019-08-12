@@ -230,10 +230,10 @@ func main() {
 	}
 
 	// Only cache if npm command is install, node_modules could be included in the repository
-	if (len(args) != 0) && (args[0] == "install") {
+	if (len(args) != 0) && (args[0] == "install" || args[0] == "i" || args[0] == "add") {
 		err := cacheNpm(workdir, parseCacheLevel(config.CacheLevel))
 		if err != nil {
-			log.Warnf("Falied to mark files for caching, error: %s", err)
+			log.Warnf("Failed to mark files for caching, error: %s", err)
 		}
 	}
 
