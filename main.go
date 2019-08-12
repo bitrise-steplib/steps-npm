@@ -23,20 +23,7 @@ type Config struct {
 	Workdir    string `env:"workdir"`
 	Command    string `env:"command,required"`
 	NpmVersion string `env:"npm_version"`
-	CacheLevel string `env:"cache_level,opt[none,local,global]"`
-}
-
-func parseCacheLevel(level string) cacheLevel {
-	switch level {
-	case "none":
-		return cacheNone
-	case "local":
-		return cacheLocal
-	case "global":
-		return cacheGlobal
-	default:
-		return cacheNone
-	}
+	UseCache   bool   `env:"cache_level,opt[true,false]"`
 }
 
 func getNpmVersionFromPackageJSON(path string) (string, error) {
@@ -136,8 +123,6 @@ func main() {
 	}
 	stepconf.Print(config)
 
-	log.SetEnableDebugLog(true)
-
 	workdir, err := pathutil.AbsPath(config.Workdir)
 	if err != nil {
 		failf("error normalizing workdir path: %s", err)
@@ -230,9 +215,8 @@ func main() {
 	}
 
 	// Only cache if npm command is install, node_modules could be included in the repository
-	if (len(args) != 0) && (args[0] == "install" || args[0] == "i" || args[0] == "add") {
-		err := cacheNpm(workdir, parseCacheLevel(config.CacheLevel))
-		if err != nil {
+	if config.UseCache && (len(args) != 0) && (args[0] == "install" || args[0] == "i" || args[0] == "add") {
+		if err := cacheNpm(workdir); err != nil {
 			log.Warnf("Failed to mark files for caching, error: %s", err)
 		}
 	}
