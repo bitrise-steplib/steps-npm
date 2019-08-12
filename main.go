@@ -23,7 +23,7 @@ type Config struct {
 	Workdir    string `env:"workdir"`
 	Command    string `env:"command,required"`
 	NpmVersion string `env:"npm_version"`
-	UseCache   bool   `env:"cache_level,opt[true,false]"`
+	UseCache   bool   `env:"cache_local_deps,opt[true,false]"`
 }
 
 func getNpmVersionFromPackageJSON(path string) (string, error) {

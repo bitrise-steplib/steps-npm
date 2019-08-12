@@ -50,5 +50,5 @@ inputs:
         `false`: Do not use cache.
       is_required: true
       value_options:
-      - "false"
       - "true"
+      - "false"
