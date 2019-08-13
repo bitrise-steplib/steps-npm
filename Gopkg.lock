@@ -15,7 +15,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d4b9188d913079f0aecbbacdd0a361b07f5aa3b0f712ea84325550b1da775e02"
+  digest = "1:09a08f51eae5abe05464667e12f6ed03f4ea0de2ec2d1593059a77ee3e937209"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -26,6 +26,7 @@
     "parseutil",
     "pathutil",
     "pointers",
+    "sliceutil",
   ]
   pruneopts = "UT"
   revision = "fcff02f7bce9d2e56a989e6a78f4f4d12f9b516c"
@@ -57,6 +58,7 @@
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
+    "github.com/bitrise-io/go-utils/sliceutil",
     "github.com/hashicorp/go-version",
     "github.com/kballard/go-shellquote",
   ]
