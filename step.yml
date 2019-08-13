@@ -41,7 +41,7 @@ inputs:
   - cache_local_deps: "false"
     opts:
       category: Cache
-      title: Cache node_modules?
+      title: Cache node_modules
       description: |
         Select if the contents of node_modules directory should be cached.
 
