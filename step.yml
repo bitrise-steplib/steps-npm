@@ -38,10 +38,10 @@ inputs:
     opts:
       title: Version of npm to use
       description: Set this value to the version of npm that is required to run the command. Must be a valid semver string.
-  - cache_local_deps: "false"
+  - cache_local_deps: "true"
     opts:
       category: Cache
-      title: Cache local dependencies?
+      title: Cache node_modules?
       description: |
         Select if the contents of node_modules directory should be cached.
 
