@@ -8,12 +8,13 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/go-steputils/stepconf"
+	"github.com/bitrise-io/go-utils/sliceutil"
 	semver "github.com/hashicorp/go-version"
 	"github.com/kballard/go-shellquote"
 )
@@ -23,6 +24,7 @@ type Config struct {
 	Workdir    string `env:"workdir"`
 	Command    string `env:"command,required"`
 	NpmVersion string `env:"npm_version"`
+	UseCache   bool   `env:"cache_local_deps,opt[true,false]"`
 }
 
 func getNpmVersionFromPackageJSON(path string) (string, error) {
@@ -211,6 +213,16 @@ func main() {
 	cmd.SetDir(workdir)
 	if err := cmd.Run(); err != nil {
 		failf("Error running command %s: %s", config.Command, err)
+	}
+
+	// Only cache if npm command is install, node_modules could be included in the repository
+	// Expecting command as the first argument of npm
+	// npm commands: https://github.com/npm/cli/blob/36682d4482cddee0acc55e8d75b3bee6e78fff37/lib/config/cmd-list.js
+	if config.UseCache &&
+		(len(args) != 0) && sliceutil.IsStringInSlice(args[0], []string{"install", "isntall", "i", "add"}) {
+		if err := cacheNpm(workdir); err != nil {
+			log.Warnf("Failed to mark files for caching, error: %s", err)
+		}
 	}
 
 	fmt.Println()
