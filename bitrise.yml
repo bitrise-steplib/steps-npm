@@ -48,7 +48,7 @@ workflows:
             #!/bin/bash
             set -ex
             if [[ $BITRISE_CACHE_INCLUDE_PATHS != *"$BITRISE_SOURCE_DIR/node_modules -> $BITRISE_SOURCE_DIR/package-lock.json"* ]]; then
-                echo "cachew path not present"
+                echo "cache path not present"
                 exit 1
             fi
     - script:
