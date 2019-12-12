@@ -40,6 +40,17 @@ workflows:
         title: Test with system provided npm
         inputs:
         - command: install
+        - cache_local_deps: true
+    - script:
+        title: Check if required files added to the cache env
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            if [[ $BITRISE_CACHE_INCLUDE_PATHS != *"$BITRISE_SOURCE_DIR/node_modules -> $BITRISE_SOURCE_DIR/package-lock.json"* ]]; then
+                echo "cachew path not present"
+                exit 1
+            fi
     - script:
         title: Generate npm version specifier into package.json
         inputs:
