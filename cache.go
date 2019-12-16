@@ -13,6 +13,7 @@ func cacheNpm(workdir string) error {
 	npmCache := cache.New()
 
 	localPackageDir := filepath.Join(workdir, "node_modules")
+	localPackageLockFile := filepath.Join(workdir, "package-lock.json")
 
 	exist, err := pathutil.IsDirExists(localPackageDir)
 	if err != nil {
@@ -22,9 +23,7 @@ func cacheNpm(workdir string) error {
 		return fmt.Errorf("local node_modules directory does not exist: %s", localPackageDir)
 	}
 
-	// cache update indicator (package-lock.json)
-	// is not used at the moment as it cache-push performed slower with it
-	npmCache.IncludePath(localPackageDir)
+	npmCache.IncludePath(localPackageDir + " -> " + localPackageLockFile)
 
 	if err := npmCache.Commit(); err != nil {
 		return fmt.Errorf("failed to mark node_modules directory to be cached, error: %s", err)
