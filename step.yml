@@ -14,8 +14,8 @@ description: |-
   Make sure you insert the Step before any build Step so that every dependency is downloaded a build Step starts running.
   
   ### Useful links
-  [Getting started Ionic/Cordova apps](https://devcenter.bitrise.io/code-signing/android-code-signing/android-code-signing-using-bitrise-sign-apk-step/)
-  [About npm](https://www.npmjs.com/)
+  - [Getting started Ionic/Cordova apps](https://devcenter.bitrise.io/code-signing/android-code-signing/android-code-signing-using-bitrise-sign-apk-step/)
+  - [About npm](https://www.npmjs.com/)
   
 website: https://github.com/bitrise-steplib/steps-npm
 source_code_url: https://github.com/bitrise-steplib/steps-npm
