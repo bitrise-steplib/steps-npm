@@ -79,7 +79,7 @@ func createInstallNpmCommand() (*command.Model, error) {
 }
 
 func setNpmVersion(ver string) error {
-	cmd := command.New("npm", "install", "-g", fmt.Sprintf("npm@%s", ver))
+	cmd := command.New("npm", "install", "-g", "--force", fmt.Sprintf("npm@%s", ver))
 	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
 		if errorutil.IsExitStatusError(err) {
