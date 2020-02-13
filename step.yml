@@ -1,20 +1,23 @@
 title: Run npm command
 summary: The Step runs npm with the command and arguments you provide, for example, to install missing packages or run a package's test.
 description: |-
-  You can install missing JS dependencies with this Step if you insert it before any build step and provide the `npm install` command. You can also test certain packages with the `test` command. You can do both in one Workflow, however, this requires one **Run npm command** Step for installation followed by another **Run npm command** Step for testing purposes.
+  You can install missing JS dependencies with this Step if you insert it before any build step and provide the `install` command. 
+  You can also test certain packages with the `test` command. 
+  You can do both in one Workflow, however, this requires one **Run npm command** Step for installation followed by another **Run npm command** Step for testing purposes.
   
   ### Configuring the Step
   1. Add the **Run npm command** Step to your Workflow preceding any build Step.
   2. Set the **Working directory**.
   3. Set the command you want npm to execute, for example `install` to run `npm install` in the **The npm command with arguments to run** input.
   4. If you're looking for a particular npm version, you can set it in the **Version of npm to use** input.
-  5. You can cache the content of the node modules directory if you select `true` in the drop-down. By default this input is set to false.
+  5. You can cache the content of the node modules directory if you select `true` in the drop-down. 
+  By default this input is set to false.
 
   ### Troubleshooting
   Make sure you insert the Step before any build Step so that every dependency is downloaded a build Step starts running.
   
   ### Useful links
-  - [Getting started Ionic/Cordova apps](https://devcenter.bitrise.io/code-signing/android-code-signing/android-code-signing-using-bitrise-sign-apk-step/)
+  - [Getting started Ionic/Cordova apps](https://devcenter.bitrise.io/getting-started/getting-started-with-ionic-cordova-apps/)
   - [About npm](https://www.npmjs.com/)
   
 website: https://github.com/bitrise-steplib/steps-npm
