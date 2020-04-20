@@ -91,3 +91,4 @@ You can share your Step or step version with the [bitrise CLI](https://github.co
 
 That's all ;)
 
+.
