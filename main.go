@@ -219,7 +219,7 @@ func main() {
 	// Expecting command as the first argument of npm
 	// npm commands: https://github.com/npm/cli/blob/36682d4482cddee0acc55e8d75b3bee6e78fff37/lib/config/cmd-list.js
 	if config.UseCache &&
-		(len(args) != 0) && sliceutil.IsStringInSlice(args[0], []string{"install", "isntall", "i", "add"}) {
+		(len(args) != 0) && sliceutil.IsStringInSlice(args[0], []string{"install", "isntall", "i", "add", "ci"}) {
 		if err := cacheNpm(workdir); err != nil {
 			log.Warnf("Failed to mark files for caching, error: %s", err)
 		}
