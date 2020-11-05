@@ -58,7 +58,7 @@ workflows:
             #!/bin/bash
             # insert npm version specifier block into package.json
             mv package.json package.json.old
-            awk '/SampleAppsReactNativeAndroid/{print "\"engines\":{\"npm\":\"6.0.0\"},"}1' package.json.old > package.json
+            awk '/SampleAppsReactNativeAndroid/{print "\"engines\":{\"npm\":\"6.14.6\"},"}1' package.json.old > package.json
             echo "generated package.json:"
             cat package.json
     - path::./:
@@ -68,7 +68,7 @@ workflows:
     - path::./:
         title: Test with user provided npm version
         inputs:
-        - npm_version: 6.2.0
+        - npm_version: "7.0.8"
         - command: --version
         - workdir: .
     - script:
