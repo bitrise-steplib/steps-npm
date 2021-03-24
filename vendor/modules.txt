@@ -1,0 +1,26 @@
+# github.com/bitrise-io/go-steputils v0.0.0-20190806143347-f540824d77df
+## explicit
+github.com/bitrise-io/go-steputils/cache
+github.com/bitrise-io/go-steputils/stepconf
+github.com/bitrise-io/go-steputils/tools
+# github.com/bitrise-io/go-utils v0.0.0-20190729141031-fcff02f7bce9
+## explicit
+github.com/bitrise-io/go-utils/colorstring
+github.com/bitrise-io/go-utils/command
+github.com/bitrise-io/go-utils/errorutil
+github.com/bitrise-io/go-utils/fileutil
+github.com/bitrise-io/go-utils/log
+github.com/bitrise-io/go-utils/parseutil
+github.com/bitrise-io/go-utils/pathutil
+github.com/bitrise-io/go-utils/pointers
+github.com/bitrise-io/go-utils/sliceutil
+# github.com/hashicorp/go-version v1.2.0
+## explicit
+github.com/hashicorp/go-version
+# github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+## explicit
+github.com/kballard/go-shellquote
+# github.com/stretchr/testify v1.7.0
+## explicit
+# gopkg.in/yaml.v2 v2.4.0
+## explicit
