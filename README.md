@@ -1,3 +1,5 @@
+test
+
 # npm step
 
 [Bitrise](https://bitrise.io) step for running [`npm`](https://www.npmjs.com/) commands.
