@@ -1,4 +1,5 @@
 test
+more test
 
 # npm step
 
