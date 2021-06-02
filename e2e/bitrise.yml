@@ -1,23 +1,20 @@
 format_version: 11
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
-app:
-  envs:
-  - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
-
 workflows:
   test_cache:
     before_run:
-    - _create_workdir
+    - _prepare_workdir
     steps:
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
         inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android # Remote or local URL
+        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
-        - clone_into_dir: .
+        - clone_into_dir: ./_tmp
     - path::./:
         title: Test with system provided npm
         inputs:
+        - workdir: ./_tmp
         - command: install
         - cache_local_deps: true
     - script:
@@ -33,28 +30,29 @@ workflows:
 
   test_system_npm_version:
     before_run:
-    - _create_workdir
+    - _prepare_workdir
     steps:
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
         inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android # Remote or local URL
+        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
-        - clone_into_dir: .
+        - clone_into_dir: ./_tmp
     - path::./:
         title: Test with system provided npm
         inputs:
+        - workdir: ./_tmp
         - command: install
         - cache_local_deps: true
 
   test_packageJSON_npm_version:
     before_run:
-    - _create_workdir
+    - _prepare_workdir
     steps:
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
         inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android # Remote or local URL
+        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
-        - clone_into_dir: .
+        - clone_into_dir: ./_tmp
     - script:
         title: Generate npm version specifier into package.json
         inputs:
@@ -68,82 +66,61 @@ workflows:
     - path::./:
         title: Test with fallback npm in package json
         inputs:
+        - workdir: ./_tmp
         - command: install
 
   test_user_provided_npm_version:
     before_run:
-    - _create_workdir
+    - _prepare_workdir
     steps:
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
         inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android # Remote or local URL
+        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
-        - clone_into_dir: .
+        - clone_into_dir: ./_tmp
     - path::./:
         title: Test with user provided npm version
         inputs:
+        - workdir: ./_tmp
         - npm_version: "7.0.8"
         - command: --version
-        - workdir: .
 
   test_no_packageJSON:
     before_run:
-    - _create_workdir
+    - _prepare_workdir
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
+    - change-workdir:
         inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android # Remote or local URL
-        - branch: master
-        - clone_into_dir: .
-    - script:
-        title: Remove package.json 
-        inputs:
-        - content: |
-            #!/bin/bash
-            echo "removing package.json for testing purposes"
-            rm package.json
+        - path: ./_tmp
+        - is_create_dir: true
     - path::./:
         title: Test with no package.json
         inputs:
+        - workdir: .
         - command: install
 
   test_multiple_arguments:
     steps:
-    - change-workdir:
-        title: Switch working dir to test
-        inputs:
-        - path: $ORIG_BITRISE_SOURCE_DIR/test
     - path::./:
         title: Test with multiple arguments
         inputs:
+        - workdir: ./test
         - command: run test-script --someswitch arg1 arg2 arg3
 
   test_unsupported_packageJSON_npm_semver:
     steps:
-    - change-workdir:
-        title: Switch working dir to test
-        inputs:
-        - path: $ORIG_BITRISE_SOURCE_DIR/test
     - path::./:
         title: Test unsupported semver in package.json 
         inputs:
+        - workir: ./test
         - command: --version
 
-  _create_workdir:
+  _prepare_workdir:
     steps:
     - script:
         title: Remove leftover _tmp folder
         inputs:
         - content: |
-            #!/bin/bash
-            rm -rf $ORIG_BITRISE_SOURCE_DIR/_tmp
-    - change-workdir:
-        title: Switch working dir to test / _tmp dir
-        description: |-
-          To prevent step testing issues, like referencing relative
-          files with just './some-file' in the step's code, which would
-          work for testing the step from this directory directly
-          but would break if the step is included in another `bitrise.yml`.
-        inputs:
-        - path: ./_tmp
-        - is_create_path: true
+            #!/bin/env bash
+            set -ex
+            rm -rf ./_tmp
