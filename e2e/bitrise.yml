@@ -11,10 +11,12 @@ workflows:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
         - clone_into_dir: ./_tmp
+    - change-workdir:
+        inputs:
+        - path: ./_tmp
     - path::./:
         title: Test with system provided npm
         inputs:
-        - workdir: ./_tmp
         - command: install
         - cache_local_deps: true
     - script:
@@ -53,6 +55,9 @@ workflows:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
         - clone_into_dir: ./_tmp
+    - change-workdir:
+        inputs:
+        - path: ./_tmp
     - script:
         title: Generate npm version specifier into package.json
         inputs:
@@ -66,7 +71,6 @@ workflows:
     - path::./:
         title: Test with fallback npm in package json
         inputs:
-        - workdir: ./_tmp
         - command: install
 
   test_user_provided_npm_version:
