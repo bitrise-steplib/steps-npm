@@ -1,12 +1,16 @@
 format_version: 11
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
+app:
+  envs:
+    - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
+
 workflows:
   test_cache:
     before_run:
     - _prepare_workdir
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
@@ -29,12 +33,15 @@ workflows:
                 echo "cache path not present"
                 exit 1
             fi
+    - change-workdir:
+        inputs:
+        - path: $ORIG_BITRISE_SOURCE_DIR
 
   test_system_npm_version:
     before_run:
     - _prepare_workdir
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
@@ -50,7 +57,7 @@ workflows:
     before_run:
     - _prepare_workdir
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
@@ -72,12 +79,15 @@ workflows:
         title: Test with fallback npm in package json
         inputs:
         - command: install
+    - change-workdir:
+        inputs:
+        - path: $ORIG_BITRISE_SOURCE_DIR
 
   test_user_provided_npm_version:
     before_run:
     - _prepare_workdir
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
