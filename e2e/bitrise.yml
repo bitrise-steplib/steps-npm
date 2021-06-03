@@ -110,8 +110,11 @@ workflows:
     - path::./:
         title: Test with no package.json
         inputs:
-        - workdir: .
+        - workdir: ./_tmp
         - command: install
+    - change-workdir:
+        inputs:
+        - path: $ORIG_BITRISE_SOURCE_DIR
 
   test_multiple_arguments:
     steps:
