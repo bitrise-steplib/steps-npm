@@ -82,8 +82,10 @@ workflows:
     - change-workdir:
         inputs:
         - path: $ORIG_BITRISE_SOURCE_DIR
+    after_run:
+      - utility_test_user_provided_npm_version # Avoiding https://github.com/npm/cli/issues/2818
 
-  test_user_provided_npm_version:
+  utility_test_user_provided_npm_version:
     before_run:
     - _prepare_workdir
     steps:
