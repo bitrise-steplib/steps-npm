@@ -110,7 +110,7 @@ workflows:
     - path::./:
         title: Test with no package.json
         inputs:
-        - workdir: ./_tmp
+        - workdir: .
         - command: install
     - change-workdir:
         inputs:
