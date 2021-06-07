@@ -101,23 +101,6 @@ workflows:
         - npm_version: "7.0.8"
         - command: --version
 
-  test_no_packageJSON:
-    before_run:
-    - _prepare_workdir
-    steps:
-    - change-workdir:
-        inputs:
-        - path: ./_tmp
-        - is_create_dir: true
-    - path::./:
-        title: Test with no package.json
-        inputs:
-        - workdir: .
-        - command: install
-    - change-workdir:
-        inputs:
-        - path: $ORIG_BITRISE_SOURCE_DIR
-
   test_multiple_arguments:
     steps:
     - path::./:
