@@ -8,7 +8,7 @@ app:
 workflows:
   test_cache:
     before_run:
-    - _prepare_workdir
+    - _setup_workdir
     steps:
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
@@ -39,7 +39,7 @@ workflows:
 
   test_system_npm_version:
     before_run:
-    - _prepare_workdir
+    - _setup_workdir
     steps:
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
@@ -55,7 +55,7 @@ workflows:
 
   test_packageJSON_npm_version:
     before_run:
-    - _prepare_workdir
+    - _setup_workdir
     steps:
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
@@ -87,7 +87,7 @@ workflows:
 
   utility_test_user_provided_npm_version:
     before_run:
-    - _prepare_workdir
+    - _setup_workdir
     steps:
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
@@ -117,7 +117,7 @@ workflows:
         - workir: ./test
         - command: --version
 
-  _prepare_workdir:
+  _setup_workdir:
     steps:
     - script:
         title: Remove leftover _tmp folder
