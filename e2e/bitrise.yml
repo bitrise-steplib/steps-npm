@@ -1,4 +1,4 @@
-format_version: 11
+format_version: "11"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
@@ -8,121 +8,121 @@ app:
 workflows:
   test_cache:
     before_run:
-    - _setup_workdir
+      - _setup
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
-        inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
-        - branch: master
-        - clone_into_dir: ./_tmp
-    - change-workdir:
-        inputs:
-        - path: ./_tmp
-    - path::./:
-        title: Test with system provided npm
-        inputs:
-        - command: install
-        - cache_local_deps: true
-    - script:
-        title: Check if required files added to the cache env
-        inputs:
-        - content: |
-            #!/bin/bash
-            set -ex
-            if [[ $BITRISE_CACHE_INCLUDE_PATHS != *"$BITRISE_SOURCE_DIR/node_modules -> $BITRISE_SOURCE_DIR/package-lock.json"* ]]; then
-                echo "cache path not present"
-                exit 1
-            fi
-    - change-workdir:
-        inputs:
-        - path: $ORIG_BITRISE_SOURCE_DIR
+      - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
+          inputs:
+            - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
+            - branch: master
+            - clone_into_dir: ./_tmp
+      - change-workdir:
+          inputs:
+            - path: ./_tmp
+      - path::./:
+          title: Test with system provided npm
+          inputs:
+            - command: install
+            - cache_local_deps: true
+      - script:
+          title: Check if required files added to the cache env
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -ex
+                if [[ $BITRISE_CACHE_INCLUDE_PATHS != *"$BITRISE_SOURCE_DIR/node_modules -> $BITRISE_SOURCE_DIR/package-lock.json"* ]]; then
+                    echo "cache path not present"
+                    exit 1
+                fi
+      - change-workdir:
+          inputs:
+            - path: $ORIG_BITRISE_SOURCE_DIR
 
   test_system_npm_version:
     before_run:
-    - _setup_workdir
+      - _setup
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
-        inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
-        - branch: master
-        - clone_into_dir: ./_tmp
-    - path::./:
-        title: Test with system provided npm
-        inputs:
-        - workdir: ./_tmp
-        - command: install
-        - cache_local_deps: true
+      - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
+          inputs:
+            - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
+            - branch: master
+            - clone_into_dir: ./_tmp
+      - path::./:
+          title: Test with system provided npm
+          inputs:
+            - workdir: ./_tmp
+            - command: install
+            - cache_local_deps: true
 
   test_packageJSON_npm_version:
     before_run:
-    - _setup_workdir
+      - _setup
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
-        inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
-        - branch: master
-        - clone_into_dir: ./_tmp
-    - change-workdir:
-        inputs:
-        - path: ./_tmp
-    - script:
-        title: Generate npm version specifier into package.json
-        inputs:
-        - content: |
-            #!/bin/bash
-            # insert npm version specifier block into package.json
-            mv package.json package.json.old
-            awk '/SampleAppsReactNativeAndroid/{print "\"engines\":{\"npm\":\"6.14.6\"},"}1' package.json.old > package.json
-            echo "generated package.json:"
-            cat package.json
-    - path::./:
-        title: Test with fallback npm in package json
-        inputs:
-        - command: install
-    - change-workdir:
-        inputs:
-        - path: $ORIG_BITRISE_SOURCE_DIR
+      - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
+          inputs:
+            - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
+            - branch: master
+            - clone_into_dir: ./_tmp
+      - change-workdir:
+          inputs:
+            - path: ./_tmp
+      - script:
+          title: Generate npm version specifier into package.json
+          inputs:
+            - content: |
+                #!/bin/bash
+                # insert npm version specifier block into package.json
+                mv package.json package.json.old
+                awk '/SampleAppsReactNativeAndroid/{print "\"engines\":{\"npm\":\"6.14.6\"},"}1' package.json.old > package.json
+                echo "generated package.json:"
+                cat package.json
+      - path::./:
+          title: Test with fallback npm in package json
+          inputs:
+            - command: install
+      - change-workdir:
+          inputs:
+            - path: $ORIG_BITRISE_SOURCE_DIR
     after_run:
       - utility_test_user_provided_npm_version # Avoiding https://github.com/npm/cli/issues/2818
 
   utility_test_user_provided_npm_version:
     before_run:
-    - _setup_workdir
+      - _setup
     steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
-        inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
-        - branch: master
-        - clone_into_dir: ./_tmp
-    - path::./:
-        title: Test with user provided npm version
-        inputs:
-        - workdir: ./_tmp
-        - npm_version: "7.0.8"
-        - command: --version
+      - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
+          inputs:
+            - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
+            - branch: master
+            - clone_into_dir: ./_tmp
+      - path::./:
+          title: Test with user provided npm version
+          inputs:
+            - workdir: ./_tmp
+            - npm_version: "7.0.8"
+            - command: --version
 
   test_multiple_arguments:
     steps:
-    - path::./:
-        title: Test with multiple arguments
-        inputs:
-        - workdir: ./test
-        - command: run test-script --someswitch arg1 arg2 arg3
+      - path::./:
+          title: Test with multiple arguments
+          inputs:
+            - workdir: ./test
+            - command: run test-script --someswitch arg1 arg2 arg3
 
   test_unsupported_packageJSON_npm_semver:
     steps:
-    - path::./:
-        title: Test unsupported semver in package.json 
-        inputs:
-        - workir: ./test
-        - command: --version
+      - path::./:
+          title: Test unsupported semver in package.json
+          inputs:
+            - workir: ./test
+            - command: --version
 
-  _setup_workdir:
+  _setup:
     steps:
-    - script:
-        title: Remove leftover _tmp folder
-        inputs:
-        - content: |
-            #!/bin/env bash
-            set -ex
-            rm -rf ./_tmp
+      - script:
+          title: Remove leftover _tmp folder
+          inputs:
+            - content: |
+                #!/bin/env bash
+                set -ex
+                rm -rf ./_tmp
