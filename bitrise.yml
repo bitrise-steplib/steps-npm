@@ -14,7 +14,7 @@ workflows:
 
   sample:
     envs:
-    - TEST_REPO_URL: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android # Remote or local URL
+    - TEST_REPO_URL: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android  # Remote or local URL
     - TEST_REPO_BRANCH: master
     steps:
     - script:
@@ -36,4 +36,4 @@ workflows:
 
   generate_readme:
     steps:
-    - git::https://github.com/bitrise-steplib/steps-readme-generator.git@main:
+    - git::https://github.com/bitrise-steplib/steps-readme-generator.git@main: { }
