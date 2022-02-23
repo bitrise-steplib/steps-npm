@@ -35,7 +35,7 @@ func getNpmVersionFromPackageJSON(path string) (string, error) {
 
 	ver, err := extractNpmVersion(jsonStr)
 	if err != nil {
-		return "", fmt.Errorf("package json content error: %s", err)
+		return "", fmt.Errorf("failed to parse package.json: %s", err)
 	}
 	return ver, nil
 }
@@ -83,9 +83,9 @@ func setNpmVersion(ver string) error {
 	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
 		if errorutil.IsExitStatusError(err) {
-			return fmt.Errorf("error running npm install: %s", out)
+			return fmt.Errorf("npm command failed: %s", out)
 		}
-		return fmt.Errorf("error running npm install: %s", err)
+		return fmt.Errorf("error running npm command: %s", err)
 	}
 
 	return nil
@@ -100,7 +100,7 @@ func systemDefined() (string, error) {
 		out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 		if err != nil {
 			if errorutil.IsExitStatusError(err) {
-				return "", fmt.Errorf("error running npm command: %s", out)
+				return "", fmt.Errorf("npm command failed: %s", out)
 			}
 			return "", fmt.Errorf("error running npm command: %s", err)
 		}
@@ -120,21 +120,26 @@ func failf(f string, args ...interface{}) {
 func main() {
 	var config Config
 	if err := stepconf.Parse(&config); err != nil {
-		failf("error parsing step config: %s", err)
+		failf("Process config: %s", err)
 	}
 	stepconf.Print(config)
 
 	workdir, err := pathutil.AbsPath(config.Workdir)
 	if err != nil {
-		failf("error normalizing workdir path: %s", err)
+		failf("Process config: failed to normalize working directory path: %s", err)
 	}
 
 	exists, err := pathutil.IsDirExists(workdir)
 	if err != nil {
-		failf("error validating workdir `%s`: %s", workdir, err)
+		failf("Process config: failed to validate working directory path `%s`: %s", workdir, err)
 	}
 	if !exists {
-		failf("specified path `%s` does not exist", workdir)
+		failf("Process config: specified working directory path `%s` does not exist", workdir)
+	}
+
+	npmArgs, err := shellquote.Split(config.Command)
+	if err != nil {
+		failf("Process config: invalid quoting of npm command/arguments: %s", err)
 	}
 
 	toInstall := false
@@ -148,7 +153,7 @@ func main() {
 		path := filepath.Join(workdir, "package.json")
 		exists, err := pathutil.IsPathExists(path)
 		if err != nil {
-			failf("error validating package.json path: %s", err)
+			failf("Install dependencies: failed to validate package.json path: %s", err)
 		}
 
 		if exists {
@@ -167,7 +172,7 @@ func main() {
 
 		systemVer, err := systemDefined()
 		if err != nil {
-			failf("error getting installed npm version: %s", err)
+			failf("Install dependencies: failed to check installed npm version: %s", err)
 		}
 		if systemVer == "" {
 			log.Warnf("npm not found on PATH")
@@ -183,11 +188,11 @@ func main() {
 
 		cmd, err := createInstallNpmCommand()
 		if err != nil {
-			failf("Error installing npm: %s", err)
+			failf("Install dependencies: %s", err)
 		}
 		log.Donef("$ %s", cmd.PrintableCommandArgs())
 		if err := cmd.Run(); err != nil {
-			failf("Error installing npm: %s", err)
+			failf("Install dependencies: failed to install npm: %s", err)
 		}
 	}
 
@@ -196,32 +201,27 @@ func main() {
 		log.Infof("Ensuring npm version %s", toSet)
 
 		if err := setNpmVersion(toSet); err != nil {
-			failf("Error setting npm version to %s: %s", toSet, err)
+			failf("Install dependencies: failed to install npm version `%s`: %s", toSet, err)
 		}
 	}
 
 	fmt.Println()
 	log.Infof("Running user provided command")
 
-	args, err := shellquote.Split(config.Command)
-	if err != nil {
-		failf("error preparing command for execution: %s", err)
-	}
-
-	cmd := command.NewWithStandardOuts("npm", args...)
+	cmd := command.NewWithStandardOuts("npm", npmArgs...)
 	log.Donef("$ %s", cmd.PrintableCommandArgs())
 	cmd.SetDir(workdir)
 	if err := cmd.Run(); err != nil {
-		failf("Error running command %s: %s", config.Command, err)
+		failf("Run: npm command failed: %s", err)
 	}
 
 	// Only cache if npm command is install, node_modules could be included in the repository
 	// Expecting command as the first argument of npm
 	// npm commands: https://github.com/npm/cli/blob/36682d4482cddee0acc55e8d75b3bee6e78fff37/lib/config/cmd-list.js
 	if config.UseCache &&
-		(len(args) != 0) && sliceutil.IsStringInSlice(args[0], []string{"install", "isntall", "i", "add", "ci"}) {
+		(len(npmArgs) != 0) && sliceutil.IsStringInSlice(npmArgs[0], []string{"install", "isntall", "i", "add", "ci"}) {
 		if err := cacheNpm(workdir); err != nil {
-			log.Warnf("Failed to mark files for caching, error: %s", err)
+			log.Warnf("Failed to mark files for caching: %s", err)
 		}
 	}
 
