@@ -212,7 +212,7 @@ func main() {
 	log.Donef("$ %s", cmd.PrintableCommandArgs())
 	cmd.SetDir(workdir)
 	if err := cmd.Run(); err != nil {
-		failf("Run: npm command failed: %s", err)
+		failf("Run: provided npm command failed: %s", err)
 	}
 
 	// Only cache if npm command is install, node_modules could be included in the repository
