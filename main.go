@@ -113,7 +113,6 @@ func systemDefined() (string, error) {
 
 func failf(f string, args ...interface{}) {
 	log.Errorf(f, args...)
-	fmt.Println()
 	os.Exit(1)
 }
 
@@ -168,7 +167,7 @@ func main() {
 
 	if toSet == "" {
 		log.Warnf("Could not read version information from package.json")
-		log.Printf("Locating system installed npm")
+		log.Printf("Locating preinstalled npm")
 
 		systemVer, err := systemDefined()
 		if err != nil {
@@ -179,7 +178,7 @@ func main() {
 			toSet = "latest"
 			toInstall = true
 		}
-		log.Printf("system npm version: %s", systemVer)
+		log.Printf("Preinstalled npm version: %s", systemVer)
 	}
 
 	if toInstall {
