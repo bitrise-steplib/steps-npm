@@ -138,7 +138,7 @@ func main() {
 
 	npmArgs, err := shellquote.Split(config.Command)
 	if err != nil {
-		failf("Process config: invalid quoting of npm command/arguments: %s", err)
+		failf("Process config: provided npm command/arguments is not a valid CLI command: %s", err)
 	}
 
 	toInstall := false
