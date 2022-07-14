@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
@@ -141,7 +142,7 @@ func main() {
 		failf("Process config: provided npm command/arguments is not a valid CLI command: %s", err)
 	}
 
-	if sliceutil.IsStringInSlice("install", npmArgs) {
+	if strings.HasPrefix(config.Command, "install") {
 		log.Donef("\n" +
 			"Info: From npm version >= v5.7.0, you can use the `npm ci` command insead of `npm install`. Using this command might speeds up your workflow.\n" +
 			"It does not work without `package-lock.json` so please commit it into the VCS repository. " +
