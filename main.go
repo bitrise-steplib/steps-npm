@@ -123,7 +123,7 @@ func main() {
 	}
 	stepconf.Print(config)
 
-	log.Warnf("\n" +
+	log.Donef("\n" +
 		"Info: From npm version >= v5.7.0, you can use the `npm ci` command insead of `npm install`. Using this command might speeds up your workflow.\n" +
 		"It does not work without `package-lock.json` so please commit it into the VCS repository. " +
 		"More info: https://github.com/npm/npm/releases/tag/v5.7.0")
