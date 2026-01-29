@@ -9,13 +9,13 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/bitrise-io/go-steputils/stepconf"
-	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-io/go-utils/sliceutil"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/log"
 	semver "github.com/hashicorp/go-version"
 	"github.com/kballard/go-shellquote"
 )
@@ -25,7 +25,6 @@ type Config struct {
 	Workdir    string `env:"workdir"`
 	Command    string `env:"command,required"`
 	NpmVersion string `env:"npm_version"`
-	UseCache   bool   `env:"cache_local_deps,opt[true,false]"`
 }
 
 func getNpmVersionFromPackageJSON(path string) (string, error) {
@@ -65,23 +64,26 @@ func extractNpmVersion(jsonStr string) (string, error) {
 	return v.String(), nil
 }
 
-func createInstallNpmCommand() (*command.Model, error) {
+func createInstallNpmCommand(cmdFactory command.Factory) (command.Command, error) {
+	var name string
 	var args []string
 	switch runtime.GOOS {
 	case "darwin":
-		args = []string{"brew", "install", "node"}
+		name = "brew"
+		args = []string{"install", "node"}
 	case "linux":
-		args = []string{"apt-get", "-y", "install", "npm"}
+		name = "apt-get"
+		args = []string{"-y", "install", "npm"}
 	default:
 		return nil, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
 
-	return command.New(args[0], args[1:]...), nil
+	return cmdFactory.Create(name, args, nil), nil
 }
 
-func setNpmVersion(ver string) error {
-	cmd := command.New("npm", "install", "-g", "--force", fmt.Sprintf("npm@%s", ver))
-	log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
+func setNpmVersion(ver string, cmdFactory command.Factory, logger log.Logger) error {
+	cmd := cmdFactory.Create("npm", []string{"install", "-g", "--force", fmt.Sprintf("npm@%s", ver)}, nil)
+	logger.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
 		if errorutil.IsExitStatusError(err) {
 			return fmt.Errorf("npm command failed: %s", out)
@@ -92,12 +94,12 @@ func setNpmVersion(ver string) error {
 	return nil
 }
 
-func systemDefined() (string, error) {
+func systemDefined(cmdFactory command.Factory, logger log.Logger) (string, error) {
 	if path, err := exec.LookPath("npm"); err == nil {
-		log.Printf("npm found at %s", path)
+		logger.Printf("npm found at %s", path)
 
-		cmd := command.New("npm", "--version")
-		log.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
+		cmd := cmdFactory.Create("npm", []string{"--version"}, nil)
+		logger.Donef(fmt.Sprintf("$ %s", cmd.PrintableCommandArgs()))
 		out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 		if err != nil {
 			if errorutil.IsExitStatusError(err) {
@@ -112,38 +114,43 @@ func systemDefined() (string, error) {
 	return "", nil
 }
 
-func failf(f string, args ...interface{}) {
-	log.Errorf(f, args...)
+func failf(logger log.Logger, f string, args ...interface{}) {
+	logger.Errorf(f, args...)
 	os.Exit(1)
 }
 
 func main() {
+	envRepo := env.NewRepository()
+	logger := log.NewLogger()
+	cmdFactory := command.NewFactory(envRepo)
+
 	var config Config
-	if err := stepconf.Parse(&config); err != nil {
-		failf("Process config: %s", err)
+	parser := stepconf.NewInputParser(envRepo)
+	if err := parser.Parse(&config); err != nil {
+		failf(logger, "Process config: %s", err)
 	}
 	stepconf.Print(config)
 
 	workdir, err := pathutil.AbsPath(config.Workdir)
 	if err != nil {
-		failf("Process config: failed to normalize working directory path: %s", err)
+		failf(logger, "Process config: failed to normalize working directory path: %s", err)
 	}
 
 	exists, err := pathutil.IsDirExists(workdir)
 	if err != nil {
-		failf("Process config: failed to validate working directory path `%s`: %s", workdir, err)
+		failf(logger, "Process config: failed to validate working directory path `%s`: %s", workdir, err)
 	}
 	if !exists {
-		failf("Process config: specified working directory path `%s` does not exist", workdir)
+		failf(logger, "Process config: specified working directory path `%s` does not exist", workdir)
 	}
 
 	npmArgs, err := shellquote.Split(config.Command)
 	if err != nil {
-		failf("Process config: provided npm command/arguments is not a valid CLI command: %s", err)
+		failf(logger, "Process config: provided npm command/arguments is not a valid CLI command: %s", err)
 	}
 
 	if strings.HasPrefix(config.Command, "install") {
-		log.Donef("\n" +
+		logger.Donef("\n" +
 			"Info: From npm version >= v5.7.0, you can use the `npm ci` command insead of `npm install`. Using this command might speeds up your workflow.\n" +
 			"It does not work without `package-lock.json` so please commit it into the VCS repository. " +
 			"More info: https://github.com/npm/npm/releases/tag/v5.7.0")
@@ -154,84 +161,77 @@ func main() {
 
 	if toSet == "" {
 		fmt.Println()
-		log.Infof("Autodetecting npm version")
-		log.Printf("Checking package.json for npm version")
+		logger.Infof("Autodetecting npm version")
+		logger.Printf("Checking package.json for npm version")
 
 		path := filepath.Join(workdir, "package.json")
 		exists, err := pathutil.IsPathExists(path)
 		if err != nil {
-			failf("Install dependencies: failed to validate package.json path: %s", err)
+			failf(logger, "Install dependencies: failed to validate package.json path: %s", err)
 		}
 
 		if exists {
 			toSet, err = getNpmVersionFromPackageJSON(path)
 			if err != nil {
-				log.Warnf("error getting version: %s", err)
+				logger.Warnf("error getting version: %s", err)
 			}
 		} else {
-			log.Warnf("No package.json found at path: %s", path)
+			logger.Warnf("No package.json found at path: %s", path)
 		}
 	}
 
 	if toSet == "" {
-		log.Warnf("Could not read version information from package.json")
-		log.Printf("Locating preinstalled npm")
+		logger.Warnf("Could not read version information from package.json")
+		logger.Printf("Locating preinstalled npm")
 
-		systemVer, err := systemDefined()
+		systemVer, err := systemDefined(cmdFactory, logger)
 		if err != nil {
-			failf("Install dependencies: failed to check installed npm version: %s", err)
+			failf(logger, "Install dependencies: failed to check installed npm version: %s", err)
 		}
 		if systemVer == "" {
-			log.Warnf("npm not found on PATH")
+			logger.Warnf("npm not found on PATH")
 			toSet = "latest"
 			toInstall = true
 		}
-		log.Printf("Preinstalled npm version: %s", systemVer)
+		logger.Printf("Preinstalled npm version: %s", systemVer)
 	}
 
 	if toInstall {
 		fmt.Println()
-		log.Infof("Ensuring npm version %s", toSet)
+		logger.Infof("Ensuring npm version %s", toSet)
 
-		cmd, err := createInstallNpmCommand()
+		cmd, err := createInstallNpmCommand(cmdFactory)
 		if err != nil {
-			failf("Install dependencies: %s", err)
+			failf(logger, "Install dependencies: %s", err)
 		}
-		log.Donef("$ %s", cmd.PrintableCommandArgs())
+		logger.Donef("$ %s", cmd.PrintableCommandArgs())
 		if err := cmd.Run(); err != nil {
-			failf("Install dependencies: failed to install npm: %s", err)
+			failf(logger, "Install dependencies: failed to install npm: %s", err)
 		}
 	}
 
 	if toSet != "" {
 		fmt.Println()
-		log.Infof("Ensuring npm version %s", toSet)
+		logger.Infof("Ensuring npm version %s", toSet)
 
-		if err := setNpmVersion(toSet); err != nil {
-			failf("Install dependencies: failed to install npm version `%s`: %s", toSet, err)
+		if err := setNpmVersion(toSet, cmdFactory, logger); err != nil {
+			failf(logger, "Install dependencies: failed to install npm version `%s`: %s", toSet, err)
 		}
 	}
 
 	fmt.Println()
-	log.Infof("Running user provided command")
+	logger.Infof("Running user provided command")
 
-	cmd := command.NewWithStandardOuts("npm", npmArgs...)
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	cmd.SetDir(workdir)
+	cmd := cmdFactory.Create("npm", npmArgs, &command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Dir:    workdir,
+	})
+	logger.Donef("$ %s", cmd.PrintableCommandArgs())
 	if err := cmd.Run(); err != nil {
-		failf("Run: provided npm command failed: %s", err)
-	}
-
-	// Only cache if npm command is install, node_modules could be included in the repository
-	// Expecting command as the first argument of npm
-	// npm commands: https://github.com/npm/cli/blob/36682d4482cddee0acc55e8d75b3bee6e78fff37/lib/config/cmd-list.js
-	if config.UseCache &&
-		(len(npmArgs) != 0) && sliceutil.IsStringInSlice(npmArgs[0], []string{"install", "isntall", "i", "add", "ci"}) {
-		if err := cacheNpm(workdir); err != nil {
-			log.Warnf("Failed to mark files for caching: %s", err)
-		}
+		failf(logger, "Run: provided npm command failed: %s", err)
 	}
 
 	fmt.Println()
-	log.Successf("Step success")
+	logger.Donef("Step success")
 }
