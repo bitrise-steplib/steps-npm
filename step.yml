@@ -10,14 +10,13 @@ description: |-
   2. Set the **Working directory**.
   3. Set the command you want npm to execute, for example `install` to run `npm install` in the **The npm command with arguments to run** input.
   4. If you're looking for a particular npm version, you can set it in the **Version of npm to use** input.
-  5. You can cache the content of the node modules directory if you select `true` in the drop-down.
-  By default this input is set to false.
 
   ### Troubleshooting
   Make sure you insert the Step before any build Step so that every dependency is downloaded a build Step starts running.
 
   ### Useful links
   - [Getting started Ionic/Cordova apps](https://devcenter.bitrise.io/getting-started/getting-started-with-ionic-cordova-apps/)
+  - NPM cache [save](https://github.com/bitrise-steplib/bitrise-step-save-npm-cache) and [restore](https://github.com/bitrise-steplib/bitrise-step-restore-npm-cache) Steps
   - [About npm](https://www.npmjs.com/)
 
 website: https://github.com/bitrise-steplib/steps-npm
@@ -57,17 +56,3 @@ inputs:
   opts:
     title: Version of npm to use
     description: Set this value to the version of npm that is required to run the command. Must be a valid semver string.
-- cache_local_deps: "false"
-  opts:
-    category: Cache
-    title: Cache node_modules
-    description: |
-      Select if the contents of node_modules directory should be cached.
-
-      `true`: Mark local dependencies to be cached.
-
-      `false`: Do not use cache.
-    is_required: true
-    value_options:
-    - "true"
-    - "false"
