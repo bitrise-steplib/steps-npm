@@ -6,37 +6,6 @@ app:
   - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
 
 workflows:
-  test_cache:
-    before_run:
-    - _setup
-    steps:
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
-        inputs:
-        - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
-        - branch: master
-        - clone_into_dir: ./_tmp
-    - change-workdir:
-        inputs:
-        - path: ./_tmp
-    - path::./:
-        title: Test with system provided npm
-        inputs:
-        - command: install
-        - cache_local_deps: true
-    - script:
-        title: Check if required files added to the cache env
-        inputs:
-        - content: |
-            #!/bin/bash
-            set -ex
-            if [[ $BITRISE_CACHE_INCLUDE_PATHS != *"$BITRISE_SOURCE_DIR/node_modules -> $BITRISE_SOURCE_DIR/package-lock.json"* ]]; then
-                echo "cache path not present"
-                exit 1
-            fi
-    - change-workdir:
-        inputs:
-        - path: $ORIG_BITRISE_SOURCE_DIR
-
   test_system_npm_version:
     before_run:
     - _setup
@@ -51,7 +20,6 @@ workflows:
         inputs:
         - workdir: ./_tmp
         - command: install
-        - cache_local_deps: true
 
   test_packageJSON_npm_version:
     before_run:
