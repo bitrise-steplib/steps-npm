@@ -109,7 +109,7 @@ func main() {
 	fmt.Println()
 	setup := resolveCorepackSetup(workdir, config.NpmVersion, logger)
 	if setup.enable {
-		if err := corepack.EnsureInstalled(cmdFactory, logger); err != nil {
+		if err := corepack.EnsureUpToDate(cmdFactory, logger); err != nil {
 			failf(logger, "Version setup: %s", err)
 		}
 		if err := corepack.Enable(cmdFactory, logger); err != nil {
