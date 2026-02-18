@@ -11,11 +11,19 @@ You can install missing JS dependencies with this Step if you insert it before a
 You can also test certain packages with the `test` command.
 You can do both in one Workflow, however, this requires one **Run npm command** Step for installation followed by another **Run npm command** Step for testing purposes.
 
+### npm version pinning
+The Step uses [corepack](https://nodejs.org/api/corepack.html) to manage the npm version. There are two ways to pin the version:
+
+1. **Recommended: `packageManager` field in `package.json`**: Add `"packageManager": "npm@10.2.0"` to your `package.json`. The Step will enable corepack, which automatically enforces this version when `npm` is called.
+2. **`npm_version` input**: Set the **Version of npm to use** input to an exact version number (e.g. `10.2.0`). This takes priority over the `packageManager` field and installs that specific version via `corepack prepare`.
+
+If neither is set, the Step runs npm as-is without changing the version.
+
 ### Configuring the Step
 1. Add the **Run npm command** Step to your Workflow preceding any build Step.
 2. Set the **Working directory**.
 3. Set the command you want npm to execute, for example `install` to run `npm install` in the **The npm command with arguments to run** input.
-4. If you're looking for a particular npm version, you can set it in the **Version of npm to use** input.
+4. Optionally pin the npm version via the `packageManager` field in `package.json` or the **Version of npm to use** input.
 
 ### Troubleshooting
 Make sure you insert the Step before any build Step so that every dependency is downloaded a build Step starts running.
@@ -24,6 +32,7 @@ Make sure you insert the Step before any build Step so that every dependency is 
 - [Getting started Ionic/Cordova apps](https://devcenter.bitrise.io/getting-started/getting-started-with-ionic-cordova-apps/)
 - NPM cache [save](https://github.com/bitrise-steplib/bitrise-step-save-npm-cache) and [restore](https://github.com/bitrise-steplib/bitrise-step-restore-npm-cache) Steps
 - [About npm](https://www.npmjs.com/)
+- [Corepack documentation](https://nodejs.org/api/corepack.html)
 </details>
 
 ## 🧩 Get started
@@ -41,7 +50,7 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | --- | --- | --- | --- |
 | `workdir` | Working directory of the step. You can leave it empty to not change it.  |  | `$BITRISE_SOURCE_DIR` |
 | `command` | Specify the command with arguments to run with `npm`.  This input value will be append to the end of the `npm` command call.  For example:  - `install` -> `npm install` - `install -g cordova` -> `npm install -g cordova` | required |  |
-| `npm_version` | Set this value to the version of npm that is required to run the command. Must be a valid semver string. |  |  |
+| `npm_version` | Set this to an exact npm version to install (e.g. `10.2.0`).  This input takes priority over the `packageManager` field in `package.json`. The Step uses corepack (`corepack prepare npm@<version> --activate`) to download and activate the specified version.  Leave empty to let the Step auto-detect the version from the `packageManager` field in `package.json`. |  |  |
 </details>
 
 <details>
