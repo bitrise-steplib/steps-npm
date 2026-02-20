@@ -1,12 +1,9 @@
 format_version: "11"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
-app:
-  envs:
-  - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
-
 workflows:
-  test_system_npm_version:
+  test_no_version_pinning:
+    description: Step works without any version pinning (no npm_version input, no packageManager field)
     before_run:
     - _setup
     steps:
@@ -15,13 +12,18 @@ workflows:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
         - clone_into_dir: ./_tmp
-    - path::./:
-        title: Test with system provided npm
+    - path::./.:
+        title: Run npm install without version pinning
         inputs:
         - workdir: ./_tmp
         - command: install
 
-  test_packageJSON_npm_version:
+  test_packageManager_field:
+    description: |
+      packageManager field in package.json is enforced via corepack.
+      The step runs `corepack enable npm` to install the npm shim, then npm install.
+      The shim enforces the pinned version lazily on the first real npm invocation.
+      We verify the version after npm install completes.
     before_run:
     - _setup
     steps:
@@ -30,30 +32,41 @@ workflows:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
         - clone_into_dir: ./_tmp
-    - change-workdir:
-        inputs:
-        - path: ./_tmp
     - script:
-        title: Generate npm version specifier into package.json
+        title: Add packageManager field to package.json
         inputs:
         - content: |
             #!/bin/bash
-            # insert npm version specifier block into package.json
-            mv package.json package.json.old
-            awk '/SampleAppsReactNativeAndroid/{print "\"engines\":{\"npm\":\"6.14.6\"},"}1' package.json.old > package.json
-            echo "generated package.json:"
-            cat package.json
-    - path::./:
-        title: Test with fallback npm in package json
+            set -ex
+            node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('./_tmp/package.json', 'utf8'));
+            pkg.packageManager = 'npm@10.2.0';
+            fs.writeFileSync('./_tmp/package.json', JSON.stringify(pkg, null, 2));
+            "
+            echo "Updated package.json:"
+            cat ./_tmp/package.json
+    - path::./.:
+        title: Run npm install with packageManager field
         inputs:
+        - workdir: ./_tmp
         - command: install
-    - change-workdir:
+    - script:
+        title: Verify npm version
         inputs:
-        - path: $ORIG_BITRISE_SOURCE_DIR
-    after_run:
-    - utility_test_user_provided_npm_version  # Avoiding https://github.com/npm/cli/issues/2818
+        - content: |
+            #!/bin/bash
+            set -ex
+            ACTUAL=$(cd ./_tmp && npm --version)
+            EXPECTED="10.2.0"
+            if [ "$ACTUAL" != "$EXPECTED" ]; then
+              echo "Expected npm $EXPECTED, got $ACTUAL"
+              exit 1
+            fi
+            echo "npm version verified: $ACTUAL"
 
-  utility_test_user_provided_npm_version:
+  test_explicit_npm_version:
+    description: npm_version input pins the version via corepack enable npm + corepack prepare --activate
     before_run:
     - _setup
     steps:
@@ -62,28 +75,33 @@ workflows:
         - repository_url: https://github.com/bitrise-samples/sample-apps-react-native-ios-and-android
         - branch: master
         - clone_into_dir: ./_tmp
-    - path::./:
-        title: Test with user provided npm version
+    - path::./.:
+        title: Run npm install with explicit version
         inputs:
         - workdir: ./_tmp
-        - npm_version: 7.0.8
-        - command: --version
+        - npm_version: 10.2.0
+        - command: install
+    - script:
+        title: Verify npm version
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            ACTUAL=$(cd ./_tmp && npm --version)
+            EXPECTED="10.2.0"
+            if [ "$ACTUAL" != "$EXPECTED" ]; then
+              echo "Expected npm $EXPECTED, got $ACTUAL"
+              exit 1
+            fi
+            echo "npm version verified: $ACTUAL"
 
   test_multiple_arguments:
     steps:
-    - path::./:
+    - path::./.:
         title: Test with multiple arguments
         inputs:
         - workdir: ./test
         - command: run test-script --someswitch arg1 arg2 arg3
-
-  test_unsupported_packageJSON_npm_semver:
-    steps:
-    - path::./:
-        title: Test unsupported semver in package.json
-        inputs:
-        - workir: ./test
-        - command: --version
 
   _setup:
     steps:

@@ -1,30 +1,73 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
-func TestExtractNpmVersion(t *testing.T) {
-
-	testCases := []struct {
-		pkgJSON string
-		want    string
-		hasE    bool
+func TestResolveCorepackSetup(t *testing.T) {
+	tests := []struct {
+		name           string
+		packageJSON    string // written to workdir/package.json if non-empty
+		npmVersion     string // explicit step input
+		wantEnable     bool
+		wantPrepare    string
 	}{
-		{`{"engines":{"npm":"3.0.1"}}`, "3.0.1", false},
-		{`"engines":{"npm":"3.0.1"}}`, "", true},
-		{`{"engines":{}}`, "", true},
-		{`{"engines":{"npm":"a.b.c"}}`, "", true},
+		{
+			name:        "explicit npm_version activates prepare",
+			npmVersion:  "9.8.1",
+			wantEnable:  true,
+			wantPrepare: "9.8.1",
+		},
+		{
+			name:        "npm_version takes priority over packageManager field",
+			packageJSON: `{"packageManager":"npm@10.2.0"}`,
+			npmVersion:  "9.8.1",
+			wantEnable:  true,
+			wantPrepare: "9.8.1",
+		},
+		{
+			name:        "packageManager npm enables corepack shim without prepare",
+			packageJSON: `{"packageManager":"npm@10.2.0"}`,
+			wantEnable:  true,
+		},
+		{
+			name:        "packageManager yarn skips corepack",
+			packageJSON: `{"packageManager":"yarn@3.0.0"}`,
+		},
+		{
+			name:        "no packageManager field skips corepack",
+			packageJSON: `{"name":"my-app","version":"1.0.0"}`,
+		},
+		{
+			name: "no package.json skips corepack",
+		},
+		{
+			name:        "invalid package.json skips corepack",
+			packageJSON: `not valid json`,
+		},
 	}
 
-	for _, tc := range testCases {
-		got, gotE := extractNpmVersion(tc.pkgJSON)
-		if got != tc.want {
-			t.Errorf(`getNpmVersionFromPackageJson(%s) returned %s instead of %s`, tc.pkgJSON, got, tc.want)
-		}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			if tc.packageJSON != "" {
+				if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(tc.packageJSON), 0600); err != nil {
+					t.Fatalf("failed to write package.json: %s", err)
+				}
+			}
 
-		if !tc.hasE && gotE != nil {
-			t.Errorf(`getNpmVersionFromPackageJson(%s) returned with error %s`, tc.pkgJSON, gotE)
-		}
+			got := resolveCorepackSetup(dir, tc.npmVersion, log.NewLogger())
+
+			if got.enable != tc.wantEnable {
+				t.Errorf("enable: got %v, want %v", got.enable, tc.wantEnable)
+			}
+			if got.prepareVersion != tc.wantPrepare {
+				t.Errorf("prepareVersion: got %q, want %q", got.prepareVersion, tc.wantPrepare)
+			}
+		})
 	}
 }
