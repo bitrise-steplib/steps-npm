@@ -57,8 +57,9 @@ func resolveCorepackSetup(workdir, npmVersion string, logger log.Logger) corepac
 	}
 
 	if name == "" {
-		logger.Warnf("No packageManager field found in package.json.\n" +
-			"To pin the npm version, add a \"packageManager\" field to package.json, e.g.:\n" +
+		logger.Warnf("No packageManager field found in package.json: using system npm from PATH.\n" +
+			"For reproducible builds, we strongly recommend pinning the npm version explicitly.\n" +
+			"Set the npm_version step input, or add a \"packageManager\" field to package.json, e.g.:\n" +
 			"  \"packageManager\": \"npm@10.2.0\"")
 		return corepackSetup{}
 	}

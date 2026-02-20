@@ -31,7 +31,7 @@ func EnsureUpToDate(cmdFactory command.Factory, logger log.Logger) error {
 	cmd := cmdFactory.Create("npm", []string{"install", "-g", "corepack@latest"}, nil)
 	logger.Donef("$ %s", cmd.PrintableCommandArgs())
 	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
-		return fmt.Errorf("failed to install corepack: %s", out)
+		return fmt.Errorf("failed to install corepack: %w\n%s", err, out)
 	}
 
 	return nil
@@ -44,7 +44,7 @@ func Enable(cmdFactory command.Factory, logger log.Logger) error {
 	cmd := cmdFactory.Create("corepack", []string{"enable", "npm"}, nil)
 	logger.Donef("$ %s", cmd.PrintableCommandArgs())
 	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
-		return fmt.Errorf("corepack enable failed: %s", out)
+		return fmt.Errorf("corepack enable failed: %w\n%s", err, out)
 	}
 
 	return nil
@@ -56,7 +56,7 @@ func PrepareNpm(version string, cmdFactory command.Factory, logger log.Logger) e
 	cmd := cmdFactory.Create("corepack", []string{"prepare", fmt.Sprintf("npm@%s", version), "--activate"}, nil)
 	logger.Donef("$ %s", cmd.PrintableCommandArgs())
 	if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
-		return fmt.Errorf("corepack prepare failed: %s", out)
+		return fmt.Errorf("corepack prepare failed: %w\n%s", err, out)
 	}
 
 	return nil
