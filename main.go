@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/bitrise-io/bitrise-build-cache-cli/v2/pkg/reactnative/wrap"
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
@@ -126,7 +128,13 @@ func main() {
 	fmt.Println()
 	logger.Infof("Running user provided command")
 
-	cmd := cmdFactory.Create("npm", npmArgs, &command.Opts{
+	det := wrap.Detect(context.Background(), wrap.DetectParams{Logger: logger})
+	if det.ReactNativeEnabled {
+		logger.Infof("Bitrise Build Cache: React Native cache active — wrapping npm with %s", det.CLIPath)
+	}
+	runnerCmdFactory := wrap.NewWrappingCommandFactory(cmdFactory, det, "npm", "npx")
+
+	cmd := runnerCmdFactory.Create("npm", npmArgs, &command.Opts{
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Dir:    workdir,
