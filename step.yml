@@ -38,6 +38,7 @@ type_tags:
 deps:
   apt_get:
   - name: nodejs
+    bin_name: node
 toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-npm
